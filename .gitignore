@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env*
+!.env.example
+*.log
+test-results/
+exports/
+*.cdr
+camera-qa.png
+Изображение Codex*.png
+references/*
+!references/office/
+references/office/*
+!references/office/20260916_210529.jpg

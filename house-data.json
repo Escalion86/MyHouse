@@ -1,0 +1,605 @@
+{
+  "schemaVersion": 1,
+  "units": "meters",
+  "status": "source-data-not-3d-model",
+  "exteriorMeasurements": {
+    "evidence": "user-measured-2026-10-29",
+    "childApronFromUpperWall": 0.66,
+    "metalBeyondSoffit": 0.04,
+    "soffitFromGroundWall": {"living": 0.43, "front": 0.38, "rear": 0.39, "office": 0.40},
+    "sideSoffitRange": [0.38, 0.39],
+    "upperWallThicknessAssumed": 0.30,
+    "pendingClarification": ["terraceDepth", "shedDimensions", "upperWallThickness"]
+  },
+  "childMeasurements": {
+    "evidence": "user-measured-2026-10-28",
+    "windowWallFromClosetCorner": [0.39, 2.45, 2.47],
+    "sideWall": 3.51,
+    "closetWallFromEntranceCorner": [0.42, 0.70, 2.39],
+    "entranceWallReturns": [1.08, 3.43],
+    "windowSections": [0.63, 1.19, 0.63],
+    "operableSections": [true, false, true],
+    "closetSize": [2.03, 3.51],
+    "pendingClarification": []
+  },
+  "showerMeasurements": {
+    "evidence": "user-measured-2026-10-28",
+    "doorWallLeftToRight": [1.61, 0.70, 1.62],
+    "sideWall": 2.38,
+    "windowWallLeftToRight": [1.83, 1.18, 0.92],
+    "doorFrameOuterWidth": 0.80
+  },
+  "bathroomMeasurements": {
+    "evidence": "user-measured-2026-10-01",
+    "windowWallLeftToRight": [2.12, 0.83, 0.50],
+    "cisternRecessed": true
+  },
+  "upperHallMeasurements": {
+    "evidence": "user-measured-2026-09-30",
+    "units": "meters",
+    "clockwiseFromWindowWallLeftCorner": {
+      "windowWall": [0.97, 1.17, 1.79],
+      "childWall": [3.28, 0.80, 0.80],
+      "bathroomWall": [1.61, 0.70, 1.62],
+      "bedroomWall": [2.27, 0.80, 1.81]
+    },
+    "stairOpening": {"width": 1.50, "length": 2.63, "windowWallGap": 0.32, "childWallGap": 0.06},
+    "stairCountReported": 15,
+    "woodenTreadCount": 15,
+    "riseCount": 16,
+    "landingIsUpperFloor": true,
+    "pendingClarification": []
+  },
+  "livingMeasurements": {
+    "evidence": "user-measured-2026-09-17-confirmed-inside-opening-edges",
+    "units": "meters",
+    "leftWallFromTvCorner": [
+      0.86,
+      1.8,
+      1.33,
+      1.8,
+      0.93
+    ],
+    "frontWallFromTvCorner": [
+      0.81,
+      1.8,
+      1.15
+    ],
+    "windowWidth": 1.8,
+    "sashWidths": [
+      0.5,
+      0.7,
+      0.5
+    ],
+    "windowBottom": 0.6,
+    "groundFloorExteriorWallThickness": 0.67,
+    "note": "Обмеры между внутренними углами и краями проёмов. Верх окон пока 2.40 м — не измерен. Высота низа окна применена также в кабинете."
+  },
+  "wallNames": {
+    "front": "Фронтальная стена — наружная стена с входной дверью в дом",
+    "left": "Левая стена — торец со стороны гостиной с кухней",
+    "right": "Правая стена — торец со стороны кабинета и котельной",
+    "rear": "Задняя стена — наружная стена со стороны кухни, ванной и котельной",
+    "viewpoint": "Снаружи лицом к фронтальной стене; названия закреплены и не меняются при повороте камеры"
+  },
+  "hallMeasurements": {
+    "evidence": "user-measured-2026-09-16",
+    "units": "meters",
+    "front": {
+      "leftCornerToOpening": 2.05,
+      "openingWidth": 0.98,
+      "openingHeight": 2,
+      "openingToRightCorner": 0.67
+    },
+    "officeSide": {
+      "frontCornerToOpening": 2.67,
+      "openingWidth": 1.23,
+      "openingHeight": 2.32,
+      "openingToRearCorner": 0.72
+    },
+    "rear": {
+      "wardrobeWidth": 2.08,
+      "wardrobeDepth": 0.6,
+      "wardrobeToBathDoor": 0.25,
+      "bathDoorWidth": 0.7,
+      "bathDoorToLivingCorner": 0.64
+    },
+    "livingSide": {
+      "rearCornerToOpening": 0.73,
+      "openingWidth": 1.23,
+      "openingHeight": 2.32,
+      "openingToStairStart": 0.44
+    },
+    "closure": {
+      "frontLength": 3.7,
+      "rearChainLength": 3.67,
+      "difference": 0.03,
+      "status": "unresolved",
+      "note": "Исходные обмеры сохранены без подгонки. Ширина двери ванной может обозначать полотно; пока используется как проём."
+    }
+  },
+  "floors": [
+    {
+      "id": 1,
+      "name": "Первый этаж",
+      "ceilingHeightM": 3,
+      "floorElevationM": 0
+    },
+    {
+      "id": 2,
+      "name": "Второй этаж",
+      "ceilingHeightM": 2.7,
+      "floorElevationM": null
+    }
+  ],
+  "rooms": [
+    {
+      "id": "room-1",
+      "planNumber": 1,
+      "floor": 1,
+      "name": "Котельная",
+      "planAreaM2": 10.2,
+      "readDimensionsM": [
+        2.51,
+        4.07
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-2",
+      "planNumber": 2,
+      "floor": 1,
+      "name": "Кабинет",
+      "planAreaM2": 18.3,
+      "readDimensionsM": [
+        4.55,
+        4.02
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": [
+        {
+          "id": "office-router",
+          "name": "Deco X60",
+          "model": "TP-Link Deco X60",
+          "kind": "router",
+          "identityEvidence": "user",
+          "placement": "Белый корпус на настенном креплении слева от Алисы; Orange Pi ниже между ними.",
+          "photos": [
+            "references/office/20260916_183744.jpg"
+          ],
+          "notes": [
+            "Внешний вид уточнён по фотографии. Размеры приблизительные; свисающие провода не моделируются."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-speaker",
+          "name": "Умная колонка",
+          "model": "Яндекс Алиса Лайт",
+          "kind": "smart-speaker",
+          "identityEvidence": "user",
+          "placement": "На стене рядом с белым устройством Deco, над полкой катушек.",
+          "photos": [
+            "references/office/20260916_183744.jpg"
+          ],
+          "notes": [
+            "Название модели сообщено владельцем; поколение не уточнено."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-server",
+          "name": "Домашний сервер",
+          "model": "Orange Pi 3B",
+          "kind": "server",
+          "identityEvidence": "user",
+          "placement": "Прозрачный корпус на стене ниже Deco и Алисы; уточнено владельцем и крупным фото.",
+          "photos": [
+            "references/office/20260916_183744.jpg"
+          ],
+          "notes": [
+            "Home Assistant и Hermes Agent установлены по сообщению владельца.",
+            "Детали корпуса, вентилятора, разъёмов и антенны воспроизведены по фото приблизительно; свисающие провода исключены."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-3d-printer",
+          "name": "3D-принтер",
+          "model": "Creality K1 Max",
+          "kind": "3d-printer",
+          "identityEvidence": "user",
+          "placement": "На открытой полке 62 × 45 × 45 см, вплотную к шкафу; рядом на этой же полке стоит сушилка филамента.",
+          "photos": [
+            "references/office/20260916_183817.jpg",
+            "references/office/20260916_183630.jpg"
+          ],
+          "notes": [],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-paper-printer",
+          "name": "Принтер Brother",
+          "model": "Brother DCP-T720DW",
+          "kind": "printer",
+          "identityEvidence": "user-and-visible-label",
+          "placement": "На длинном крыле углового стола у стены рядом с сушилкой филамента и K1 Max.",
+          "photos": [
+            "references/office/20260916_183828.jpg"
+          ],
+          "notes": [],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-desk-wled",
+          "name": "Подсветка под рабочим столом",
+          "model": "ESP-плата с WLED",
+          "kind": "led-controller",
+          "identityEvidence": "user",
+          "placement": "Чёрный кубик под столешницей со стороны обычного принтера; управляет подсветкой рабочего стола.",
+          "photos": [
+            "references/office/20260916_183752.jpg"
+          ],
+          "notes": [
+            "Назначение и прошивка подтверждены владельцем. Точная модель ESP, протяжённость подсветки и её сущности HA пока неизвестны."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "office-lights",
+          "name": "Выключатель кабинета",
+          "model": "Модель не уточнена",
+          "kind": "smart-switch",
+          "identityEvidence": "user",
+          "placement": "У проёма в кабинет, со стороны кабинета.",
+          "channels": [
+            {
+              "id": "chandeliers",
+              "label": "Люстры кабинета"
+            },
+            {
+              "id": "spots",
+              "label": "Точечные светильники кабинета"
+            }
+          ],
+          "photos": [],
+          "notes": [
+            "Количество клавиш и назначение подтверждены владельцем. Высота и отступы приблизительные по фотографиям; порядок клавиш пока условный."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "room-3",
+      "planNumber": 3,
+      "floor": 1,
+      "name": "Коридор",
+      "planAreaM2": 17.2,
+      "readDimensionsM": [
+        4.64,
+        3.7
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": [
+        {
+          "id": "hall-robot-vacuum",
+          "name": "Xiaomi S20+",
+          "model": "Xiaomi Robot Vacuum S20+",
+          "kind": "robot-vacuum",
+          "identityEvidence": "user",
+          "placement": "На первом этаже, под нижним маршем лестницы, у стены кухни-гостиной.",
+          "photos": ["references/hall/xiaomi-s20-plus.jpg"],
+          "notes": ["Подключён к Home Assistant по подтверждению владельца. Точная сущность выбирается в карточке устройства. Положение на базе статично; перемещения по дому не отслеживаются."],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "user-confirmed"
+        },
+        {
+          "id": "hall-entry-lights",
+          "name": "Выключатель у входной двери",
+          "model": "Модель не уточнена",
+          "kind": "smart-switch",
+          "identityEvidence": "user",
+          "placement": "В коридоре рядом с входной дверью.",
+          "channels": [
+            {
+              "id": "hall",
+              "label": "Свет в коридоре · 1 этаж"
+            },
+            {
+              "id": "outdoor",
+              "label": "Свет на улице"
+            }
+          ],
+          "photos": [],
+          "notes": [
+            "Количество клавиш и назначение подтверждены владельцем. Высота и отступы приблизительные по фотографиям; порядок клавиш пока условный."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "bathroom-light",
+          "name": "Выключатель ванной",
+          "model": "Модель не уточнена",
+          "kind": "smart-switch",
+          "identityEvidence": "user",
+          "placement": "В коридоре рядом с дверью ванной.",
+          "channels": [
+            {
+              "id": "bathroom",
+              "label": "Свет в ванной"
+            }
+          ],
+          "photos": [],
+          "notes": [
+            "Количество клавиш и назначение подтверждены владельцем. Высота и отступы приблизительные по фотографиям; порядок клавиш пока условный."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "upstairs-hall-light",
+          "name": "Выключатель коридора · 2 этаж",
+          "model": "Модель не уточнена",
+          "kind": "smart-switch",
+          "identityEvidence": "user",
+          "placement": "На первом этаже: слева вплотную к двойному выключателю кухни-гостиной.",
+          "channels": [
+            {
+              "id": "hall-upstairs",
+              "label": "Свет в коридоре · 2 этаж"
+            }
+          ],
+          "photos": [],
+          "notes": [
+            "Количество клавиш и назначение подтверждены владельцем. Высота и отступы приблизительные по фотографиям; порядок клавиш пока условный."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "room-4",
+      "planNumber": 4,
+      "floor": 1,
+      "name": "Техническая ванная",
+      "planAreaM2": 7,
+      "readDimensionsM": [
+        2.01,
+        3.46
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-5",
+      "planNumber": 5,
+      "floor": 1,
+      "name": "Гостиная с кухней",
+      "planAreaM2": 25.5,
+      "readDimensionsM": [
+        6.73,
+        3.79
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": [
+        {
+          "id": "living-kettle",
+          "name": "Умный чайник",
+          "model": "Модель не уточнена",
+          "kind": "smart-kettle",
+          "placement": "На столешнице кухни, рядом с углом гарнитура.",
+          "photos": [
+            "references/living/20260917_100326.jpg"
+          ],
+          "notes": [
+            "Умное устройство по подтверждению владельца."
+          ],
+          "identityEvidence": "user",
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "living-speaker",
+          "name": "Алиса 2",
+          "model": "Яндекс Станция 2",
+          "kind": "smart-speaker",
+          "placement": "На тумбе рядом с телевизором.",
+          "photos": [
+            "references/living/20260917_100338.jpg"
+          ],
+          "notes": [
+            "Модель уточнена владельцем: Алиса 2."
+          ],
+          "identityEvidence": "user",
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "living-tv",
+          "name": "Телевизор",
+          "model": "Модель не уточнена",
+          "kind": "television",
+          "placement": "На угловой тумбе. По словам владельца, включается голосом через Алису.",
+          "photos": [
+            "references/living/20260917_100338.jpg"
+          ],
+          "notes": [
+            "Умный телевизор; голосовое включение через Алису подтверждено владельцем."
+          ],
+          "identityEvidence": "user",
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        },
+        {
+          "id": "living-lights",
+          "name": "Выключатель кухни-гостиной",
+          "model": "Модель не уточнена",
+          "kind": "smart-switch",
+          "identityEvidence": "user",
+          "placement": "Возле проёма в кухню-гостиную, со стороны коридора.",
+          "channels": [
+            {
+              "id": "chandeliers",
+              "label": "Люстры кухни-гостиной"
+            },
+            {
+              "id": "spots",
+              "label": "Точечные светильники кухни-гостиной"
+            }
+          ],
+          "photos": [],
+          "notes": [
+            "Количество клавиш и назначение подтверждены владельцем. Высота и отступы приблизительные по фотографиям; порядок клавиш пока условный."
+          ],
+          "positionM": null,
+          "haDeviceId": null,
+          "haEntityIds": [],
+          "integrationStatus": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "room-6",
+      "planNumber": 6,
+      "floor": 2,
+      "name": "Мансарда",
+      "planAreaM2": 10.2,
+      "readDimensionsM": [
+        7.53,
+        1.35
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-7",
+      "planNumber": 7,
+      "floor": 2,
+      "name": "Спальня",
+      "planAreaM2": 28.9,
+      "readDimensionsM": [
+        7.4,
+        3.63
+      ],
+      "dimensionsStatus": "ambiguous-reading-area-mismatch",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-8",
+      "planNumber": 8,
+      "floor": 2,
+      "name": "Коридор",
+      "planAreaM2": 16,
+      "readDimensionsM": [
+        4.9,
+        3.91
+      ],
+      "dimensionsStatus": "bounding-dimensions-stair-void",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-9",
+      "planNumber": 9,
+      "floor": 2,
+      "name": "Душевая",
+      "planAreaM2": 9.3,
+      "readDimensionsM": [
+        3.9,
+        2.38
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-10",
+      "planNumber": 10,
+      "floor": 2,
+      "name": "Детская",
+      "planAreaM2": 22.1,
+      "readDimensionsM": [
+        5.26,
+        4.2
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    },
+    {
+      "id": "room-11",
+      "planNumber": 11,
+      "floor": 2,
+      "name": "Гардеробная",
+      "planAreaM2": 8.7,
+      "readDimensionsM": [
+        2.06,
+        4.2
+      ],
+      "dimensionsStatus": "transcribed-from-photo",
+      "haAreaId": null,
+      "devices": []
+    }
+  ],
+  "stairs": {
+    "from": 1,
+    "to": 2,
+    "shape": "quarter-turn-winders",
+    "shapeEvidence": "photographs",
+    "stepCount": null,
+    "widthM": null
+  },
+  "notes": [
+    "Названия комнат и высоты подтверждены владельцем.",
+    "readDimensionsM — прочитанные подписи, не готовые координаты стен.",
+    "Помещение room-6 имеет открытую наружную сторону с парапетом по фотографиям.",
+    "Отметка пола второго этажа требует толщины перекрытия.",
+    "Сущности Home Assistant ещё не сопоставлены."
+  ]
+}

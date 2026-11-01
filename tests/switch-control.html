@@ -1,0 +1,10 @@
+<!doctype html><html lang="ru"><meta charset="UTF-8"><title>Проверка управления выключателем</title><div id="root"></div>
+<script type="module">
+import React,{useState} from 'react';import{createRoot}from'react-dom/client';
+import SwitchControl from '/src/SwitchControl.jsx';import{getSwitchStates,getSwitchCommand}from'/src/ha/switchStates.js';import'/src/style.css';
+const h=React.createElement,device={id:'qa',channels:[{id:'hall',label:'Свет в коридоре · 1 этаж'},{id:'outdoor',label:'Свет на улице'}]},mappings={'qa:hall':['light.hall'],'qa:outdoor':['switch.outdoor']};
+function Test(){const[states,setStates]=useState({'light.hall':{state:'on'},'switch.outdoor':{state:'off'}}),[connected,setConnected]=useState(true),[log,setLog]=useState([]);return h('main',{style:{width:360,padding:24,background:'white',margin:30}},
+h('h2',null,'Выключатель у входа'),h(SwitchControl,{device,mappings,states,connected,powerStates:getSwitchStates([device],mappings,states,connected),onError:message=>setLog(v=>[...v,message]),onToggle:async(id,key)=>{const cmd=getSwitchCommand(id,key,mappings,states,connected);setLog(v=>[...v,`${cmd.entityId}: ${cmd.service}`]);setStates(v=>({...v,[cmd.entityId]:{state:cmd.service==='turn_on'?'on':'off'}}));}}),
+h('button',{onClick:()=>setConnected(v=>!v)},'Изменить соединение'),h('pre',{'aria-label':'Команды'},log.join('\n')));}
+createRoot(document.getElementById('root')).render(h(Test));
+</script></html>

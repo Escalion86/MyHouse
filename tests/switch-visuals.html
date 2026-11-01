@@ -1,0 +1,18 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><title>Проверка индикации выключателей</title>
+<style>body{font:16px system-ui;background:#eee;padding:24px;color:#24352d}canvas{display:block}button{padding:10px;margin:8px 8px 8px 0}p{max-width:600px}</style>
+<h1>Проверка индикации — тестовые состояния</h1><p>Эта страница не подключается к HA и не управляет устройствами.</p>
+<button id="swap">Поменять состояния</button><button id="lost">Нет связи</button><p id="status"></p>
+<script type="module">
+import * as T from 'three';
+import {buildSwitches} from '/src/model/buildSwitches.js';
+const root=new T.Group(),deviceMeshes={};
+const mats={white:new T.MeshStandardMaterial({color:'#f2f1e9'}),metal:new T.MeshStandardMaterial({color:'#646c6d'})};
+const visuals=buildSwitches(root,{mats,pickables:[],deviceMeshes});
+const scene=new T.Scene();scene.background=new T.Color('#dedfd9');
+const group=deviceMeshes['office-lights'];scene.add(group);group.position.set(0,0,0);group.rotation.set(0,0,0);group.scale.x=-1;
+scene.add(new T.HemisphereLight('#ffffff','#555555',2.6));const light=new T.DirectionalLight('#fff6e5',3.1);light.position.set(-2,3,4);scene.add(light);
+const camera=new T.PerspectiveCamera(35,1.5,.01,10);camera.position.set(.035,.025,.20);camera.lookAt(0,0,0);
+const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(600,400);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.append(renderer.domElement);
+let flipped=false;function render(a,b){visuals.setStates({'office-lights:chandeliers':a,'office-lights:spots':b});document.querySelector('#status').textContent=`Люстры: ${a}. Точечные: ${b}.`;renderer.render(scene,camera);}
+document.querySelector('#swap').onclick=()=>{flipped=!flipped;render(flipped?'off':'on',flipped?'on':'off');};document.querySelector('#lost').onclick=()=>render('disconnected','disconnected');render('on','off');
+</script></html>
