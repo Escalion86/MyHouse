@@ -1,2 +1,2 @@
 import {defineConfig} from 'vite';
-export default defineConfig({base:'./',build:{rollupOptions:{output:{manualChunks:{three:['three'],react:['react','react-dom']}}}}});
+export default defineConfig({base:'./',server:{proxy:{'/api':'http://127.0.0.1:3001'}},build:{rollupOptions:{output:{manualChunks:{three:['three'],react:['react','react-dom']}}}}});

@@ -2,27 +2,27 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {House,Bot,ChevronRight,ToggleLeft,Box,Server,Printer,Lightbulb,Speaker,Menu,X,Plus,Minus,RotateCcw,Download,Info,ArrowUp,ArrowDown,ArrowLeft,ArrowRight,Link,Check,Unplug} from 'lucide-react';
 import Viewer from './scene/Viewer';
 import {rooms,devices,roomById,assumptions} from './model/layout';
-import {HomeAssistantClient} from './ha/client';
+import {ServerClient} from './ha/serverClient';
 import SwitchControl from './SwitchControl';
 import VacuumControl from './VacuumControl';
 import {vacuumCommand,vacuumStateLabels} from './ha/vacuum';
 import {getSwitchStates,switchStateLabels,getSwitchCommand} from './ha/switchStates';
 
-const read=(key,otherwise)=>{try{return JSON.parse(localStorage.getItem(key))??otherwise;}catch{return otherwise;}};
-const save=(key,val)=>{try{localStorage.setItem(key,JSON.stringify(val));}catch{/* Storage can be disabled. */}};
 const deviceIcons={'robot-vacuum':Bot,'smart-switch':ToggleLeft,'smart-speaker':Speaker,server:Server,'3d-printer':Box,printer:Printer,'led-controller':Lightbulb};
 const deviceNames={'office-router':'Deco X60','office-speaker':'Алиса Лайт','office-server':'Домашний сервер','office-3d-printer':'Creality K1 Max','office-paper-printer':'Brother DCP-T720DW','office-desk-wled':'Подсветка стола','living-kettle':'Умный чайник','living-speaker':'Алиса 2','living-tv':'Телевизор'};
 function Modal({title,children,onClose}){const ref=useRef();useEffect(()=>{ref.current.showModal();},[]);return <dialog ref={ref} onCancel={onClose} onClick={e=>{if(e.target===ref.current)onClose();}}><div className="dialog-header"><h2>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><X size={20}/></button></div>{children}</dialog>;}
 
-export default function App(){
+export default function App({initialSnapshot,onLogout,onExpired}){
  const [freeCamera,setFreeCamera]=useState(false);
  const [floor,setFloor]=useState(1),[mode,setMode]=useState('overview'),[roomId,setRoomId]=useState('room-2'),[deviceId,setDeviceId]=useState(null),[menu,setMenu]=useState(false),[modal,setModal]=useState(null),[building,setBuilding]=useState(null);
- const [status,setStatus]=useState('disconnected'),[states,setStates]=useState({}),[address,setAddress]=useState(()=>read('twin.ha.address','http://192.168.1.232:8123')),[token,setToken]=useState(''),[connectionError,setConnectionError]=useState(''),[mappings,setMappings]=useState(()=>read('twin.ha.mappings',{})),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[demo,setDemo]=useState(false),[demoColor,setDemoColor]=useState('#e9bb79');
+ const [status,setStatus]=useState(initialSnapshot.status),[states,setStates]=useState(initialSnapshot.states),[address]=useState(initialSnapshot.haUrl),[token,setToken]=useState(''),[connectionError,setConnectionError]=useState(''),[mappings,setMappings]=useState(initialSnapshot.mappings),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[demo,setDemo]=useState(false),[demoColor,setDemoColor]=useState('#e9bb79');
  const [channelId,setChannelId]=useState(null);
  const [exportUrl,setExportUrl]=useState(null),[exportBusy,setExportBusy]=useState(false);
  const [doors,setDoors]=useState([]),[furniture,setFurniture]=useState([]);
- const viewer=useRef(),client=useRef(null);if(!client.current)client.current=new HomeAssistantClient({onStatus:setStatus,onStates:setStates});
- useEffect(()=>()=>client.current.disconnect(),[]);
+ const [tokenConfigured,setTokenConfigured]=useState(initialSnapshot.tokenConfigured);
+ const viewer=useRef(),client=useRef(null);
+ if(!client.current){client.current=new ServerClient({onSnapshot:s=>{setStatus(s.status);setStates(s.states);setMappings(s.mappings);setTokenConfigured(s.tokenConfigured);},onExpired,onError:message=>{setStatus('disconnected');setStates({});setNotice(message);}});client.current.ready=initialSnapshot.status==='connected';client.current.states=initialSnapshot.states;}
+ useEffect(()=>{client.current.start();return ()=>client.current.stop();},[]);
  useEffect(()=>{if(!notice)return;const id=setTimeout(()=>setNotice(''),5000);return()=>clearTimeout(id);},[notice]);
  const device=devices.find(d=>d.id===deviceId),entities=useMemo(()=>Object.values(states).sort((a,b)=>(a.attributes.friendly_name||a.entity_id).localeCompare(b.attributes.friendly_name||b.entity_id,'ru')),[states]);
  const channel=device?.channels?.find(c=>c.id===channelId)||device?.channels?.[0];
@@ -36,9 +36,9 @@ export default function App(){
  },[connected,wledEntity,demo,demoColor,mappings,states]);
  const chooseFloor=f=>{setFloor(f);setDeviceId(null);setBuilding(null);setRoomId(f===1?'room-2':f===2?'room-8':null);if(f===0)setMode('overview');setMenu(false);};
  const chooseRoom=id=>{const r=roomById[id];if(id!==null&&!r)return;setRoomId(id);if(r)setFloor(r.floor);setDeviceId(null);setBuilding(null);setMenu(false);};
- const chooseDevice=(id,key=null,fromScene=false)=>{const d=devices.find(d=>d.id===id);if(!d)return;if(!fromScene){setFloor(roomById[d.roomId].floor);setRoomId(d.roomId);}setDeviceId(id);setChannelId(key);setBuilding(null);setMenu(false);};
- const mapDevice=ids=>{const next={...mappings,[mappingKey]:[...new Set(ids.filter(Boolean))]};setMappings(next);save('twin.ha.mappings',next);};
- const connect=async e=>{e.preventDefault();setConnectionError('');try{await client.current.connect(address,token);save('twin.ha.address',address);setToken('');setModal(null);setNotice('Подключено. Можно привязать устройства к сущностям.');}catch(error){setConnectionError(error.message);}};
+ const chooseDevice=(id,key=null,fromScene=false)=>{const d=devices.find(d=>d.id===id);if(!d)return;if(!fromScene){setFloor(roomById[d.roomId].floor);setRoomId(d.roomId);}if(id===deviceId&&(fromScene||floor===roomById[d.roomId].floor))viewer.current?.focusDevice(id);setDeviceId(id);setChannelId(key);setBuilding(null);setMenu(false);};
+ const mapDevice=async ids=>{try{await client.current.saveMapping(mappingKey,[...new Set(ids.filter(Boolean))]);}catch(error){setNotice(error.message);}};
+ const connect=async e=>{e.preventDefault();setConnectionError('');setBusy(true);try{await client.current.connect(token);setToken('');setModal(null);setNotice('Подключено. Настройки сохраняются на сервере.');}catch(error){setConnectionError(error.message);}finally{setBusy(false);}};
  const command=async(service,data={})=>{if(!primary)return;setBusy(true);try{await client.current.service(primary.entity_id,service,data);setNotice('Команда отправлена в Home Assistant');}catch(error){setNotice(error.message);}finally{setBusy(false);}};
  const commandVacuum=async service=>{const entityId=selectedMappings[0],entity=client.current.states[entityId];const cmd=vacuumCommand(entity,client.current.ready,service);if(!cmd)throw new Error('Команда недоступна: проверь подключение и привязку пылесоса.');await client.current.service(cmd.entityId,cmd.service);setNotice('Команда отправлена в Home Assistant');};
  const toggleSwitchChannel=async(id,key)=>{const cmd=getSwitchCommand(id,key,mappings,client.current.states,client.current.ready);if(!cmd)throw new Error('Клавиша недоступна: проверь подключение и привязку.');await client.current.service(cmd.entityId,cmd.service);};
@@ -46,7 +46,7 @@ export default function App(){
  const title=floor===0?'Дом и участок':floor===1?'Первый этаж':'Второй этаж';
  const domain=primary?.entity_id.split('.')[0],available=connected&&primary&&!['unavailable','unknown'].includes(primary.state);
  return <div className="app">
-  <header className="header"><button className="icon-button mobile-menu" onClick={()=>setMenu(v=>!v)} aria-label="Открыть список помещений"><Menu/></button><div className="brand"><House strokeWidth={1.65} size={32}/><span>Мой дом</span></div><div className="connection"><span className={`dot ${connected?'connected':''}`}/><span className="connection-text">Home Assistant {connected?'подключён':status==='connecting'?'подключается…':'не подключён'}</span><button className="button" onClick={()=>setModal('connect')}>{connected?'Подключение':'Подключить'}</button></div></header>
+  <header className="header"><button className="icon-button mobile-menu" onClick={()=>setMenu(v=>!v)} aria-label="Открыть список помещений"><Menu/></button><div className="brand"><House strokeWidth={1.65} size={32}/><span>Мой дом</span></div><div className="connection"><span className={`dot ${connected?'connected':''}`}/><span className="connection-text">Home Assistant {connected?'подключён':status==='connecting'?'подключается…':'не подключён'}</span><button className="button" onClick={()=>setModal('connect')}>{connected?'Подключение':'Подключить'}</button><button className="button" onClick={onLogout}>Выйти</button></div></header>
   {menu&&<button aria-label="Скрыть меню" className="sidebar-backdrop" onClick={()=>setMenu(false)}/>}
   <aside className={`sidebar ${menu?'open':''}`}><h2>Пространства</h2><div className="segments floors">{[[0,'Участок'],[1,'1 этаж'],[2,'2 этаж']].map(([f,label])=><button key={f} aria-pressed={floor===f} className={floor===f?'active':''} onClick={()=>chooseFloor(f)}>{label}</button>)}</div>
    <nav className="room-list" aria-label="Помещения">{floor===0?<>{['Дом','Гараж','Баня'].map(name=><button key={name} className="room-row" onClick={()=>name==='Дом'?chooseFloor(1):setBuilding(name)}><span>{name}</span><ChevronRight size={17}/></button>)}<p className="site-distance">Между домом и постройками<br/><strong>4,55 м</strong></p></>:rooms.filter(r=>r.floor===floor).map(r=><button key={r.id} className={`room-row ${roomId===r.id?'selected':''}`} onClick={()=>chooseRoom(r.id)}><span>{r.name}</span><small>{r.planAreaM2.toLocaleString('ru-RU',{minimumFractionDigits:1})} м²</small><ChevronRight size={17}/></button>)}</nav>
@@ -78,7 +78,7 @@ export default function App(){
   </main>
   {notice&&<div role="status" className="toast">{notice}</div>}
   {modal==='accuracy'&&<Modal title="Точность модели" onClose={()=>setModal(null)}><p>Первая версия по техническим планам и фотографиям. Проверенные размеры и приближения разделены.</p><ul className="assumptions">{assumptions.map(a=><li key={a}>{a}</li>)}</ul><button className="button primary full" onClick={()=>setModal(null)}>Понятно</button></Modal>}
-  {modal==='connect'&&<Modal title="Home Assistant" onClose={()=>setModal(null)}>{connected?<><p><Check size={18}/> Соединение установлено с {address}</p><p>Доступно сущностей: {entities.length}. Нажмите на устройство, чтобы выбрать его сущности.</p><button className="button full" onClick={()=>{client.current.disconnect();setModal(null);}}><Unplug size={17}/>Отключить</button></>:<form onSubmit={connect}><p>Подключение напрямую к твоему серверу. Токен используется только в памяти этой страницы и не сохраняется.</p><label className="field-label">Адрес сервера<input type="url" required value={address} onChange={e=>setAddress(e.target.value)} placeholder="http://192.168.1.232:8123"/></label><button type="button" className="text-button" onClick={()=>setAddress(address.includes('10.10.0.2')?'http://192.168.1.232:8123':'http://10.10.0.2:8123')}>Использовать {address.includes('10.10.0.2')?'домашний адрес':'адрес VPN: 10.10.0.2'}</button><label className="field-label">Долгосрочный токен доступа<input type="password" autoComplete="off" required value={token} onChange={e=>setToken(e.target.value)} placeholder="Вставьте токен здесь"/></label><p className="muted small">Создаётся в профиле Home Assistant → Безопасность → Долгосрочные токены доступа.</p>{connectionError&&<p className="form-error" role="alert">{connectionError}</p>}<button className="button primary full" disabled={status==='connecting'}>{status==='connecting'?'Подключение…':'Подключить'}</button></form>}</Modal>}
+  {modal==='connect'&&<Modal title="Home Assistant" onClose={()=>setModal(null)}><p>Сервер: <strong>{address}</strong></p><p>Подключение и привязки устройств сохраняются на сервере и доступны после входа с любого устройства. Токен хранится в зашифрованном виде.</p><form onSubmit={connect}><label>Долгоживущий токен Home Assistant<input type="password" autoComplete="off" value={token} onChange={e=>setToken(e.target.value)} required={!tokenConfigured} placeholder={tokenConfigured?'Оставьте пустым, чтобы использовать сохранённый токен':'Вставьте токен из профиля Home Assistant'}/></label>{connectionError&&<p role="alert">{connectionError}</p>}<button className="button primary" disabled={busy}>{busy?'Подключение…':tokenConfigured?'Подключить / обновить токен':'Подключить'}</button>{tokenConfigured&&<button type="button" className="button" disabled={busy} onClick={async()=>{setBusy(true);try{await client.current.disconnect();setToken('');setModal(null);}catch(e){setConnectionError(e.message);}finally{setBusy(false);}}}>Отключить и удалить токен</button>}</form></Modal>}
  </div>;
 }
 
