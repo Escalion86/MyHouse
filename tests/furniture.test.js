@@ -462,7 +462,8 @@ test('Пять выключателей: восемь независимых к�
 });
 
 test('Наклон и подсветка клавиш независимы, потеря HA сбрасывает прежнюю индикацию',()=>{
- const keys=model.deviceMeshes['office-lights'].children.filter(o=>o.userData.channelLabel);
+ const group=model.deviceMeshes['office-lights'];
+ const keys=['chandeliers','spots'].map(id=>group.children.find(o=>o.userData.channelId===id));
  const neutral=model.deviceMeshes['bathroom-light'].children.find(o=>o.userData.channelLabel);
  model.setSwitchStates({'office-lights:chandeliers':'on','office-lights:spots':'off'});
  assert.equal(keys[0].userData.powerState,'on');assert.equal(keys[1].userData.powerState,'off');
@@ -471,6 +472,14 @@ test('Наклон и подсветка клавиш независимы, по
  assert.notEqual(keys[0].material,keys[1].material);assert.equal(neutral.material.emissiveIntensity,0);
  model.setSwitchStates({});
  for(const key of keys){assert.equal(key.rotation.x,0);assert.equal(key.userData.powerState,'disconnected');assert.equal(key.children[0].material.emissiveIntensity,0);}
+});
+
+test('Кабинет: левая клавиша включает точечные светильники, правая — люстры',()=>{
+ const device=devices.find(d=>d.id==='office-lights');
+ assert.deepEqual(device.channels.map(c=>c.id),['spots','chandeliers']);
+ const group=model.deviceMeshes[device.id];
+ const position=id=>group.children.find(o=>o.userData.channelId===id).getWorldPosition(new T.Vector3());
+ assert.ok(position('spots').x<position('chandeliers').x,'Порядок клавиш учитывает зеркальное отражение модели дома');
 });
 
 test('Гостиная: обмеры внутренних углов и цепочки проёмов, окна на высоте 60 см',()=>{
