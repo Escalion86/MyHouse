@@ -2,6 +2,23 @@
   "schemaVersion": 1,
   "units": "meters",
   "status": "source-data-not-3d-model",
+  "wallMeasurements": {
+    "evidence": "user-measured-2026-11-10",
+    "units": "meters",
+    "groundLivingHall": 0.35,
+    "groundOfficeHall": 0.63,
+    "upperBedroomHall": 0.19,
+    "upperChildHall": 0.18,
+    "childWindowExteriorWall": 0.23,
+    "childWindowFlushWith": "exterior",
+    "stairWallAlignment": {
+      "lowerWallContinuousToUpperFloor": true,
+      "upperWallOffsetMagnitude": 0.06,
+      "upperWallOffsetDirection": null
+    },
+    "applicationStatus": "pending-storey-registration-clarification",
+    "note": "Подтверждённые толщины сохранены отдельно от прежних допущений модели. Размерная цепочка по фасаду даёт смещение внутренних стен 67 см вместо сообщённого уступа 6 см. Направление уступа и исходная привязка наружных граней требуют уточнения; геометрия пока не изменена."
+  },
   "exteriorMeasurements": {
     "evidence": "user-measured-2026-10-29",
     "childApronFromUpperWall": 0.66,

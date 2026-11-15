@@ -1,0 +1,30 @@
+.wall-measurement{position:absolute;right:26px;bottom:24px;z-index:6;pointer-events:auto}
+.wall-measurement>.measurement-toggle{background:#fff;width:42px;height:42px}
+.wall-measurement>.measurement-toggle[aria-pressed=true]{background:#355b49;color:white}
+.measurement-panel{position:absolute;bottom:52px;right:0;width:min(330px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:#fffffff2;border:1px solid #bac6be;border-radius:8px;padding:12px;box-shadow:0 4px 18px #0002}
+.scene-bottom .view-tools{margin-left:auto;margin-right:52px}
+.measurement-panel p{font-size:12px;line-height:1.5;margin:0 0 10px}
+.measurement-panel p[role=status]{font-size:15px;font-weight:600}
+.wall-measurement button:focus-visible{outline:3px solid #1588e8;outline-offset:2px}
+.measurement-review-form{display:grid;gap:10px;margin-bottom:10px}
+.measurement-review-form label{display:grid;gap:5px;font-size:13px}
+.measurement-review-form input{width:100%;min-width:0;box-sizing:border-box;padding:8px;border:1px solid #94a89a;border-radius:5px;font:inherit}
+.measurement-review-form label{min-width:0}
+.measurement-type{display:grid;gap:6px;margin-bottom:12px;font-size:13px;min-width:0}
+.measurement-type select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #94a89a;border-radius:5px;background:white;padding:8px;font:inherit}
+.measurement-checkbox{display:flex;align-items:center;gap:8px;font-size:13px}
+.measurement-checkbox{margin:14px 0 10px}
+.measurement-checkbox input{width:18px;height:18px;flex:none;accent-color:#355b49}
+.measurement-match{color:#176b38}
+.measurement-error{color:#a42121}
+.measurement-legend span:first-child{color:#aa2525}
+.measurement-legend span:last-child{color:#176b38}
+.measurement-panel summary{cursor:pointer;font-size:13px;padding:8px 0}
+.measurement-reviews{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.measurement-reviews li{border-left:4px solid #df3030;padding:6px 8px;background:#f9f5f3;font-size:12px;display:grid;gap:5px}
+.measurement-reviews li.measurement-correct{border-color:#159447;background:#f2f8f3}
+.measurement-reviews li.measurement-unresolved{border-color:#7a7a7a;background:#f3f3f3}
+.measurement-reviews button{font:inherit;padding:5px 8px;margin-right:6px;border:1px solid #bac6be;background:white;border-radius:4px;cursor:pointer}
+.stair-navigation{position:absolute;bottom:170px;left:28px;z-index:5;background:#fff}
+@media(max-width:650px){.stair-navigation{left:16px;bottom:180px}}
+@media(max-width:650px){.wall-measurement{right:16px;bottom:18px}.wall-measurement>.measurement-toggle{width:38px;height:38px}.scene-bottom .view-tools{margin-right:45px}.measurement-panel{bottom:48px;max-height:35vh;overflow:auto}}

@@ -81,6 +81,7 @@ export function buildHouse(scene,onSelect) {
  function box(parent,name,x,y,z,w,h,d,material,collision=false,wall=false) {
   if(w<=0||h<=0||d<=0)return;
   const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
+  if(parent===ceilings&&name.startsWith('Потолок '))mesh.userData.measureSurface='ceiling';
   const finishes=Array.isArray(material)?material:[material];
   if(finishes.includes(mats.brick)||(mats.siteBrick&&finishes.includes(mats.siteBrick)))projectFacadeUV(mesh,1.2,.96);
   else if(finishes.includes(mats.osb))projectFacadeUV(mesh,1,1);
@@ -95,10 +96,11 @@ export function buildHouse(scene,onSelect) {
  mats.entryBrown=mat('#2c1912',{roughness:.54});
  mats.terraceWood=mat('#ffffff',{map:terraceWoodTex,roughness:.88});
  // Wall runs along x or z. Openings are distances along run, with lower and upper heights.
- function wall(parent,axis,a,b,fixed,base,height,thickness,openings=[],material=mats.wall) {
+ function wall(id,parent,axis,a,b,fixed,base,height,thickness,openings=[],material=mats.wall) {
   const faceMaterials=Array.isArray(material)?material:Array(6).fill(material);
   if(material===mats.brick||material===mats.osb){faceMaterials[2]=mats.wall;faceMaterials[axis==='x'?(fixed<D/2?4:5):(fixed<W/2?0:1)]=mats.wall;}
-  const make=(lo,hi,y0,y1)=>box(parent,'Стена',axis==='x'?(lo+hi)/2:fixed,base+(y0+y1)/2,axis==='x'?fixed:(lo+hi)/2,axis==='x'?hi-lo:thickness,y1-y0,axis==='x'?thickness:hi-lo,faceMaterials,true,true);
+  let segment=0;
+  const make=(lo,hi,y0,y1)=>{const measureId=`wall:${id}:${segment++}`,mesh=box(parent,'Стена',axis==='x'?(lo+hi)/2:fixed,base+(y0+y1)/2,axis==='x'?fixed:(lo+hi)/2,axis==='x'?hi-lo:thickness,y1-y0,axis==='x'?thickness:hi-lo,faceMaterials,true,true);if(mesh){mesh.userData.measureWall=true;mesh.userData.measureId=measureId;}return mesh;};
   let p=a;
   for(const o of [...openings].sort((u,v)=>u.at-v.at)) {
    make(p,o.at,0,height);if(o.bottom>0)make(o.at,o.at+o.width,0,o.bottom);make(o.at,o.at+o.width,o.top,height);
@@ -176,6 +178,7 @@ export function buildHouse(scene,onSelect) {
     box(ceilings,r.id==='room-3'?'Потолок вокруг лестничного проёма':'Потолок '+r.name,(a+c)/2,3.025,(b+d)/2,c-a,.05,d-b,mats.white);
   } else if(r.id!=='room-6')box(ceilings,'Потолок '+r.name,(x0+x1)/2,r.y+(r.floor===1?3:2.7)+.025,(z0+z1)/2,x1-x0,.05,z1-z0,mats.white);
  });
+ for(const group of floorGroups)for(const mesh of group.children)if(mesh.isMesh)mesh.userData.measureSurface='floor';
  const footprint=mesh=>{
   mesh.geometry.computeBoundingBox();const b=mesh.geometry.boundingBox,p=mesh.position;
   return [p.x+b.min.x,p.z+b.min.z,p.x+b.max.x,p.z+b.max.z];
@@ -183,14 +186,14 @@ export function buildHouse(scene,onSelect) {
  const upperFloorFootprints=floorGroups[1].children.filter(o=>o.isMesh).map(footprint);
  const g=floorGroups[0];
  const measuredWindow=(at,name)=>({...win(at,LIVING.windowWidth),bottom:LIVING.windowBottom,sashWidths:LIVING.sashWidths,name});
- wall(g,'x',LIVING.x0-EXT,W+EXT,LIVING.z0-EXT/2,0,3,EXT,LIVING.leftWindows.map((at,i)=>measuredWindow(at,'Окно гостиной · левая стена '+(i+1))),mats.brick);
- wall(g,'x',LIVING.x0-EXT,W+EXT,D+EXT/2,0,3,EXT,[{...win(.725,.6),sashWidths:[.52],name:'Окно котельной'},door(1.525,.85,{id:'boiler-yard',label:'Котельная — двор',swing:-1,dark:true,material:mats.entryBrown})],mats.brick);
- wall(g,'z',LIVING.z0,D,LIVING.x0-EXT/2,0,3,EXT,[{...BATHROOM.window,sashWidths:[BATHROOM.window.width-.08],name:'Окно ванной'}],mats.brick);
- wall(g,'z',LIVING.z0,D,W+EXT/2,0,3,EXT,[measuredWindow(LIVING.frontWindow,'Окно гостиной · фронтальная стена'),door(HALL.entrance.at,HALL.entrance.width,{id:'entrance',label:'Входная дверь',hingeSide:'end',swing:-1,dark:true,material:mats.entryBrown},HALL.entrance.height),measuredWindow(9.2,'Окно кабинета')],mats.brick);
- wall(g,'x',LIVING.x0,W,HALL.bounds[1]-.075,0,3,.15,[door(HALL.livingOpening.at,HALL.livingOpening.width,null,HALL.livingOpening.height)]);
- wall(g,'x',LIVING.x0,W,HALL.bounds[3]+.075,0,3,.15,[door(HALL.officeOpening.at,HALL.officeOpening.width,null,HALL.officeOpening.height)]);
- wall(g,'z',HALL.bounds[1],HALL.bounds[3],HALL.bounds[0]-.05,0,3,.1,[door(HALL.bathroom.at,HALL.bathroom.width,{id:'bathroom',label:'Техническая ванная',swing:1})]);
- wall(g,'z',7.99,D,2.56,0,3,.1,[door(8.15,.8,{id:'office-boiler',label:'Кабинет — котельная',swing:1})]);
+ wall('ground-street',g,'x',LIVING.x0-EXT,W+EXT,LIVING.z0-EXT/2,0,3,EXT,LIVING.leftWindows.map((at,i)=>measuredWindow(at,'Окно гостиной · левая стена '+(i+1))),mats.brick);
+ wall('ground-yard',g,'x',LIVING.x0-EXT,W+EXT,D+EXT/2,0,3,EXT,[{...win(.725,.6),sashWidths:[.52],name:'Окно котельной'},door(1.525,.85,{id:'boiler-yard',label:'Котельная — двор',swing:-1,dark:true,material:mats.entryBrown})],mats.brick);
+ wall('ground-bathroom-side',g,'z',LIVING.z0,D,LIVING.x0-EXT/2,0,3,EXT,[{...BATHROOM.window,sashWidths:[BATHROOM.window.width-.08],name:'Окно ванной'}],mats.brick);
+ wall('ground-entrance-side',g,'z',LIVING.z0,D,W+EXT/2,0,3,EXT,[measuredWindow(LIVING.frontWindow,'Окно гостиной · фронтальная стена'),door(HALL.entrance.at,HALL.entrance.width,{id:'entrance',label:'Входная дверь',hingeSide:'end',swing:-1,dark:true,material:mats.entryBrown},HALL.entrance.height),measuredWindow(9.2,'Окно кабинета')],mats.brick);
+ wall('living-hall',g,'x',LIVING.x0,W,HALL.bounds[1]-.075,0,3,.15,[door(HALL.livingOpening.at,HALL.livingOpening.width,null,HALL.livingOpening.height)]);
+ wall('office-hall',g,'x',LIVING.x0,W,HALL.bounds[3]+.075,0,3,.15,[door(HALL.officeOpening.at,HALL.officeOpening.width,null,HALL.officeOpening.height)]);
+ wall('bathroom-hall',g,'z',HALL.bounds[1],HALL.bounds[3],HALL.bounds[0]-.05,0,3,.1,[door(HALL.bathroom.at,HALL.bathroom.width,{id:'bathroom',label:'Техническая ванная',swing:1})]);
+ wall('office-boiler',g,'z',7.99,D,2.56,0,3,.1,[door(8.15,.8,{id:'office-boiler',label:'Кабинет — котельная',swing:1})]);
  // Thresholds ensure connected floor surfaces.
  box(g,'Перекрытие',(LIVING.x0+W)/2,-.16,(LIVING.z0+D)/2,W-LIVING.x0+EXT*2,.12,D-LIVING.z0+EXT*2,mats.wall);
  box(g,'Цоколь дома',(LIVING.x0+W)/2,-.295,(LIVING.z0+D)/2,W-LIVING.x0+EXT*2,.15,D-LIVING.z0+EXT*2,mats.wall);
@@ -200,28 +203,28 @@ export function buildHouse(scene,onSelect) {
  const upperFinishes=upperHallMaterials(mat);
  const upperFace=index=>Array.from({length:6},(_,i)=>i===index?upperFinishes.wall:mats.wall);
  const [childX0,childZ0,childX1,childZ1]=CHILD.bounds;
- wall(u,'x',childX0-.3,CLOSET.bounds[2]+.3,childZ0-.15,y,2.7,.3,[{...CHILD.window,name:'Окно детской'}],mats.osb);
- wall(u,'z',childZ0,childSide,childX0-.15,y,2.7,.3,[],mats.wall);
- wall(u,'z',childSide,bedroomSide,SHOWER.bounds[0]-.15,y,2.7,.3,[{...SHOWER.window,sashWidths:[.545,.545],name:'Окно душевой'}],mats.wall);
- wall(u,'z',bedroomSide,terraceStart,-.33,y,2.7,.3,[],mats.wall);
- wall(u,'z',childZ0,childSide,hallFront+.15,y,2.7,.3,[],mats.wall);
- wall(u,'z',childSide,bedroomSide,hallFront+.15,y,2.7,.3,[{...UPPER_HALL.window,sashWidths:Array(2).fill((UPPER_HALL.window.width-.09)/2),name:'Окно коридора второго этажа'}],upperFace(1));
- wall(u,'z',bedroomSide,terraceStart,hallFront+.15,y,2.7,.3,[],mats.wall);
- wall(u,'x',childX0,rear-.075,childSide-.075,y,2.7,.15,[]);
- wall(u,'x',rear-.075,hallFront,childSide-.075,y,2.7,.15,[door(up.child.at,up.child.width,{id:'child',label:'Детская',swing:1,material:upperFinishes.wood,style:'wood-glazed'})],upperFace(4));
- wall(u,'x',-.18,rear-.075,bedroomSide+.075,y,2.7,.15,[]);
- wall(u,'x',rear-.075,hallFront,bedroomSide+.075,y,2.7,.15,[door(up.bedroom.at,up.bedroom.width,{id:'bedroom',label:'Спальня',swing:-1,material:upperFinishes.wood,style:'wood-plain'})],upperFace(5));
- wall(u,'z',childZ0,childZ1,CHILD.closetPartition.center,y,2.7,CHILD.closetPartition.thickness,[door(CHILD.closetOpening.at,CHILD.closetOpening.width)]);
- wall(u,'z',childSide,bedroomSide,rear-.075,y,2.7,.15,[door(up.bathroom.at,up.bathroom.width,{id:'shower',label:'Душевая',swing:1,material:upperFinishes.darkWood,style:'wood-plain'})],upperFace(0));
+ wall('upper-child-window',u,'x',childX0-.3,CLOSET.bounds[2]+.3,childZ0-.15,y,2.7,.3,[{...CHILD.window,name:'Окно детской'}],mats.osb);
+ wall('upper-child-left',u,'z',childZ0,childSide,childX0-.15,y,2.7,.3,[],mats.wall);
+ wall('upper-shower-left',u,'z',childSide,bedroomSide,SHOWER.bounds[0]-.15,y,2.7,.3,[{...SHOWER.window,sashWidths:[.545,.545],name:'Окно душевой'}],mats.wall);
+ wall('upper-bedroom-left',u,'z',bedroomSide,terraceStart,-.33,y,2.7,.3,[],mats.wall);
+ wall('upper-child-right',u,'z',childZ0,childSide,hallFront+.15,y,2.7,.3,[],mats.wall);
+ wall('upper-hall-right',u,'z',childSide,bedroomSide,hallFront+.15,y,2.7,.3,[{...UPPER_HALL.window,sashWidths:Array(2).fill((UPPER_HALL.window.width-.09)/2),name:'Окно коридора второго этажа'}],upperFace(1));
+ wall('upper-bedroom-right',u,'z',bedroomSide,terraceStart,hallFront+.15,y,2.7,.3,[],mats.wall);
+ wall('closet-hall',u,'x',childX0,rear-.075,childSide-.075,y,2.7,.15,[]);
+ wall('child-hall',u,'x',rear-.075,hallFront,childSide-.075,y,2.7,.15,[door(up.child.at,up.child.width,{id:'child',label:'Детская',swing:1,material:upperFinishes.wood,style:'wood-glazed'})],upperFace(4));
+ wall('shower-bedroom',u,'x',-.18,rear-.075,bedroomSide+.075,y,2.7,.15,[]);
+ wall('bedroom-hall',u,'x',rear-.075,hallFront,bedroomSide+.075,y,2.7,.15,[door(up.bedroom.at,up.bedroom.width,{id:'bedroom',label:'Спальня',swing:-1,material:upperFinishes.wood,style:'wood-plain'})],upperFace(5));
+ wall('child-closet',u,'z',childZ0,childZ1,CHILD.closetPartition.center,y,2.7,CHILD.closetPartition.thickness,[door(CHILD.closetOpening.at,CHILD.closetOpening.width)]);
+ wall('shower-hall',u,'z',childSide,bedroomSide,rear-.075,y,2.7,.15,[door(up.bathroom.at,up.bathroom.width,{id:'shower',label:'Душевая',swing:1,material:upperFinishes.darkWood,style:'wood-plain'})],upperFace(0));
  const disposeUpperHall=buildUpperHall(u,{box,cylinder,mats,finishes:upperFinishes});
  const disposeShower=buildShowerRoom(u,ceilings,{box,cylinder,sphere,mat,mats,colliders,pickables,furnitureSystem});
  const disposeChild=buildChildRoom(u,ceilings,{box,cylinder,sphere,mat,mats,colliders});
- wall(u,'x',-.18,7.35,terraceStart-.075,y,2.7,.15,[{...win(2.8,1.8),bottom:.7,top:2.25,sashWidths:[.855,.855],name:'Окно спальни'},door(4.6,.85,{id:'balcony',label:'Спальня — балкон',swing:1,style:'pvc-glazed'},2.25)],mats.osb);
+ wall('bedroom-balcony',u,'x',-.18,7.35,terraceStart-.075,y,2.7,.15,[{...win(2.8,1.8),bottom:.7,top:2.25,sashWidths:[.855,.855],name:'Окно спальни'},door(4.6,.85,{id:'balcony',label:'Спальня — балкон',swing:1,style:'pvc-glazed'},2.25)],mats.osb);
  const disposeBedroom=buildBedroom(u,ceilings,{box,cylinder,sphere,mat,mats,colliders,furnitureSystem,registerWall});
- wall(u,'x',-.33,7.5,parapetZ,y,1.1,.2,[],mats.terraceWood);
+ wall('balcony-parapet',u,'x',-.33,7.5,parapetZ,y,1.1,.2,[],mats.terraceWood);
  box(u,'Деревянный поручень террасы',3.585,y+1.1,parapetZ,7.89,.065,.25,mats.terraceWood);
- wall(u,'z',terraceStart,parapetZ,-.28,y,2.7,.2,[],mats.osb);
- wall(u,'z',terraceStart,parapetZ,7.45,y,2.7,.2,[],mats.osb);
+ wall('balcony-left',u,'z',terraceStart,parapetZ,-.28,y,2.7,.2,[],mats.osb);
+ wall('balcony-right',u,'z',terraceStart,parapetZ,7.45,y,2.7,.2,[],mats.osb);
  for(const x of [1.65,3.5,5.35])box(u,'Стойка мансарды',x,y+1.35,parapetZ,.09,2.7,.1,mats.wood,true);
  box(ceilings,'Потолок мансарды',3.58,y+2.73,12.8+UPPER_Z_SHIFT,7.73,.06,1.5,mats.osb);
  buildInterstoreySlab(u,{
@@ -325,6 +328,14 @@ export function buildHouse(scene,onSelect) {
  const disposeSite=buildSite(site,{box,cylinder,sphere,wall,win,door,mat,mats,annexX,annexWidth,houseEdge:W+EXT});
  // Common infinite presentation ground is separate from site visibility.
  const ground=box(scene,'Основание сцены',4,-.42,6,200,.1,200,mats.ground);ground.castShadow=false;
+ // Semantic names and per-name fragment numbers survive dimension/position changes.
+ const measurementNames=new Map();
+ root.traverse(mesh=>{
+  if(!mesh.userData.measureSurface||mesh.userData.measureId)return;
+  let owner=mesh.parent;while(owner&&!owner.userData.floor)owner=owner.parent;
+  const key=`${mesh.userData.measureSurface}:${owner?.userData.floor||0}:${mesh.name}`;
+  const index=measurementNames.get(key)||0;measurementNames.set(key,index+1);mesh.userData.measureId=`${key}:${index}`;
+ });
  const ceilingLayers=ceilings.children.map(mesh=>({mesh,belowUpper:new T.Box3().setFromObject(mesh).max.y<=LEVEL}));
  function applyView(floor,mode) {
   const walk=mode==='walk';

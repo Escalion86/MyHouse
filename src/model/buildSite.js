@@ -56,7 +56,7 @@ export function buildSite(site,{box,cylinder,sphere,wall,win,door,mat,mats,annex
  }
  const garage=new T.Group();garage.name='Гараж';site.add(garage);
  const gh=2.65,gz=-.2,ge=5.8;
- wall(garage,'z',gz,ge,annexX+.1,0,gh,.2,[win(.5,.73),win(2.05,.73),door(4.2,.85,{id:'garage',label:'Гараж',swing:1,dark:true,floor:0})],mats.siteBrick);
+ wall('garage-yard',garage,'z',gz,ge,annexX+.1,0,gh,.2,[win(.5,.73),win(2.05,.73),door(4.2,.85,{id:'garage',label:'Гараж',swing:1,dark:true,floor:0})],mats.siteBrick);
  for(const z of [gz+.1,ge-.1])box(garage,'Торец гаража',annexX+annexWidth/2,gh/2,z,annexWidth,gh,.2,mats.siteBrick,true);
  box(garage,'Задняя стена гаража',annexX+annexWidth-.1,gh/2,2.8,.2,gh,6,mats.siteBrick,true);
  box(garage,'Пол гаража',annexX+annexWidth/2,-.05,2.8,annexWidth,.1,6,mats.siteConcrete);
@@ -66,9 +66,9 @@ export function buildSite(site,{box,cylinder,sphere,wall,win,door,mat,mats,annex
  const bath=new T.Group();bath.name='Баня';site.add(bath);
  const bz=5.8,be=10.6,bh=2.5,front=be-.1;
  const sideWindow={at:7.65,width:.83,bottom:.85,top:2.05};
- wall(bath,'z',bz,be,annexX+.1,0,bh,.2,[sideWindow],mats.siteLogs);
+ wall('bath-side',bath,'z',bz,be,annexX+.1,0,bh,.2,[sideWindow],mats.siteLogs);
  const openings=[{at:annexX+.48,width:.84,bottom:0,top:2.13,leaf:{id:'sauna',label:'Баня',swing:1,floor:0,style:'pvc-glazed'}},{at:annexX+1.5,width:.85,bottom:.7,top:2.08},{at:annexX+2.95,width:.65,bottom:.85,top:1.75}];
- wall(bath,'x',annexX,annexX+annexWidth,front,0,bh,.2,openings,mats.siteLogs);
+ wall('bath-front',bath,'x',annexX,annexX+annexWidth,front,0,bh,.2,openings,mats.siteLogs);
  box(bath,'Задняя стена бани',annexX+annexWidth-.1,bh/2,8.2,.2,bh,4.8,mats.siteLogs,true);
  box(bath,'Перегородка бани',annexX+annexWidth/2,bh/2,bz+.1,annexWidth,bh,.2,mats.siteBrick,true);
  box(bath,'Пол бани',annexX+annexWidth/2,-.05,8.2,annexWidth,.1,4.8,mats.floor);

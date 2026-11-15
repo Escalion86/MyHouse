@@ -1,15 +1,26 @@
-import React,{useEffect,useRef,useState,useImperativeHandle,forwardRef} from 'react';
+import React,{useEffect,useRef,useState,useCallback,useImperativeHandle,forwardRef} from 'react';
 import * as T from 'three';
+import {Ruler} from 'lucide-react';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 import {buildHouse} from '../model/buildHouse';
 import {W,D,LEVEL,roomById,centerOf,mirrorX,roomAt,entrance,officeDoor,HALL,LIVING,SHOWER,CHILD,CLOSET} from '../model/layout';
 import {moveWalker,walkBlocked,routeToFloor,followStairRoute} from './walkNavigation';
 import {pickSurface,roomForSurface} from './picking';
+import {createWallMeasurement,wallSurface} from './wallMeasurement';
+import MeasurementReview,{useMeasurementReviews} from './MeasurementReview';
+import './wallMeasurement.css';
 
-export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,deviceId,onRoom,onDevice,deskLight,switchStates,onFloor,onDoors,onFurniture,onNotice},ref) {
- const mount=useRef(null),engine=useRef(null),props=useRef({});props.current={floor,mode,freeCamera,roomId,deviceId,onRoom,onDevice,onFloor,onDoors,onFurniture,onNotice};
- const [error,setError]=useState(''),[location,setLocation]=useState(''),[stairAvailable,setStairAvailable]=useState(false),[followingStairs,setFollowingStairs]=useState(false);
+export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,deviceId,onRoom,onDevice,deskLight,switchStates,onFloor,onDoors,onFurniture,onNotice,onLocation},ref) {
+ const mount=useRef(null),engine=useRef(null),props=useRef({});props.current={floor,mode,freeCamera,roomId,deviceId,onRoom,onDevice,onFloor,onDoors,onFurniture,onNotice,onLocation};
+ const [error,setError]=useState(''),[stairAvailable,setStairAvailable]=useState(false),[followingStairs,setFollowingStairs]=useState(false);
+ const [measuring,setMeasuring]=useState(false),[measurement,setMeasurement]=useState('Выберите первую поверхность: стену, пол или потолок.');
+ const [draft,setDraft]=useState(null),[showCorrect,setShowCorrect]=useState(false);
+ const [measureType,setMeasureType]=useState('distance');
+ const changeMeasureType=value=>{setMeasureType(value);engine.current?.setMeasurementType(value);};
+ const resolveMeasurements=useCallback(records=>engine.current?.resolveMeasurementReviews(records)||records,[]);
+ const reviews=useMeasurementReviews(measuring,resolveMeasurements);
+ const measureActive=useRef(false);measureActive.current=measuring;
  useImperativeHandle(ref,()=>({focusDevice:id=>engine.current?.focusDevice(id),toggleDoor:id=>engine.current?.toggleDoor(id),toggleFurniture:id=>engine.current?.toggleFurniture(id),reset:()=>engine.current?.overview(props.current.floor),zoom:n=>engine.current?.zoom(n),move:(key,pressed)=>engine.current?.key(key,pressed),export:async()=>{
   const e=engine.current;if(!e)return;e.model.applyView(0,'walk');
   const lineMaterials=[];e.model.root.traverse(o=>{if(o.isLine){lineMaterials.push([o,o.material]);o.material=new T.MeshBasicMaterial({color:o.material.color});}});
@@ -18,10 +29,12 @@ export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,de
  useEffect(()=>{
   const host=mount.current;let renderer;try{renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});}catch{setError('Браузер не смог запустить 3D. Включите аппаратное ускорение или откройте приложение в Chrome / Edge.');return;}
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.appendChild(renderer.domElement);renderer.domElement.setAttribute('aria-label','Интерактивная 3D-модель дома');renderer.domElement.setAttribute('tabindex','0');
+  renderer.localClippingEnabled=true;
   const scene=new T.Scene();scene.background=new T.Color('#eeeeeb');scene.fog=new T.Fog('#eeeeeb',50,100);
   const camera=new T.PerspectiveCamera(44,1,.04,180);const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.1;controls.maxPolarAngle=Math.PI*.48;controls.minDistance=3;controls.maxDistance=50;
   scene.add(new T.HemisphereLight('#ffffff','#b3b9a8',2.6));const sun=new T.DirectionalLight('#fff6e5',3.1);sun.position.set(-10,22,-6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-25;sun.shadow.camera.right=25;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.normalBias=.025;sun.shadow.bias=-.0003;scene.add(sun);
   const model=buildHouse(scene);const keys=new Set();let yaw=0,pitch=0,feet=0,last=performance.now(),animation,drag=null,dragged=false,selectedGlow=null,lastRoom='',disposed=false,route=null,viewSelection=null,lastStairAvailable=false;
+  const ruler=createWallMeasurement(scene,setMeasurement,value=>setDraft(value?{...value,id:crypto.randomUUID(),floor:props.current.floor,label:roomById[props.current.roomId]?.name||''}:null),model.root);
   const isFree=()=>props.current.mode==='overview'&&props.current.freeCamera;
   let focusTween=null;
   const cancelFocus=()=>{focusTween=null;controls.enableDamping=true;};
@@ -70,6 +83,10 @@ export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,de
   const step=(dx,dz)=>place(moveWalker(player(),dx,dz,blocked));
   const startStairs=()=>{keys.clear();route=routeToFloor(player(),props.current.floor===2?1:2);setFollowingStairs(true);};
   const click=ev=>{if(dragged)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((ev.clientX-rect.left)/rect.width*2-1,-(ev.clientY-rect.top)/rect.height*2+1);ray.setFromCamera(pointer,camera);const hit=pickSurface(ray,model.root);
+   if(measureActive.current){
+    const wallHit=ray.intersectObject(model.root,true).find(h=>{for(let o=h.object;o;o=o.parent)if(!o.visible)return false;return wallSurface(h);});
+    ruler.select(wallHit);return;
+   }
    if(props.current.mode==='overview'){
     const room=roomForSurface(hit,props.current.floor);
     props.current.onRoom(room?.id??null,false);
@@ -110,7 +127,7 @@ export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,de
     camera.position.y+=(feet+1.62-camera.position.y)*(1-Math.exp(-14*dt));
     const onStairs=feet>.01&&feet<LEVEL-.01;
     const r=roomAt(camera.position.x,camera.position.z,feet);
-    const label=onStairs?'Лестница · между 1 и 2 этажами':r?`${r.floor} этаж · ${r.name}`:'Участок';if(label!==lastRoom){setLocation(label);lastRoom=label;}
+    const label=onStairs?'Лестница · между 1 и 2 этажами':r?`${r.floor===1?'Первый':'Второй'} этаж · ${r.name}`:'Участок';if(label!==lastRoom){props.current.onLocation?.(label);lastRoom=label;}
     const canUseStairs=onStairs||r?.id==='room-3'||r?.id==='room-8';
     if(canUseStairs!==lastStairAvailable){lastStairAvailable=canUseStairs;setStairAvailable(canUseStairs);}
     const reachedFloor=feet>=LEVEL-.001?2:feet<.001?1:null;
@@ -128,14 +145,20 @@ export default forwardRef(function Viewer({floor,mode,freeCamera=false,roomId,de
    renderer.domElement.dataset.cameraPosition=camera.position.toArray().map(v=>v.toFixed(3)).join(',');
    renderer.domElement.dataset.cameraMode=isFree()?'free':props.current.mode;
    renderer.render(scene,camera);animation=requestAnimationFrame(tick);
-  };animation=requestAnimationFrame(tick);resize();
-  return()=>{disposed=true;cancelAnimationFrame(animation);ro.disconnect();window.removeEventListener('keydown',kd);window.removeEventListener('keyup',ku);window.removeEventListener('blur',blur);renderer.domElement.removeEventListener('wheel',wheel);controls.dispose();model.dispose();renderer.dispose();host.replaceChildren();engine.current=null;};
+  };engine.current.resetMeasurement=ruler.reset;engine.current.setMeasurementType=ruler.setType;engine.current.resolveMeasurementReviews=ruler.resolveRecords;engine.current.setMeasurementReviews=ruler.setReviews;animation=requestAnimationFrame(tick);resize();
+  return()=>{disposed=true;ruler.dispose();cancelAnimationFrame(animation);ro.disconnect();window.removeEventListener('keydown',kd);window.removeEventListener('keyup',ku);window.removeEventListener('blur',blur);renderer.domElement.removeEventListener('wheel',wheel);controls.dispose();model.dispose();renderer.dispose();host.replaceChildren();engine.current=null;};
  },[]);
  useEffect(()=>{const e=engine.current;if(e){e.model.applyView(floor,mode);e.select(roomId);e.setMode(mode,floor,roomId);e.configureCamera();}},[floor,mode,roomId,freeCamera]);
  useEffect(()=>{engine.current?.focusDevice(deviceId);},[deviceId,floor,mode]);
  useEffect(()=>{engine.current?.model.setDeskLight(deskLight.on,deskLight.color,deskLight.brightness);},[deskLight]);
  useEffect(()=>{engine.current?.model.setSwitchStates(switchStates);},[switchStates]);
- return <div className="viewer" ref={mount}>{error&&<div className="scene-error">{error}</div>}{mode==='walk'&&<div className="walk-location">{location}<span>WASD / стрелки · Потяните мышью, чтобы осмотреться</span>{stairAvailable&&<button className="button stair-walk" onClick={()=>followingStairs?engine.current?.stopStairs():engine.current?.startStairs()}>{followingStairs?'Остановиться':floor===2?'Спуститься на 1 этаж':'Подняться на 2 этаж'}</button>}</div>}</div>;
+ useEffect(()=>{engine.current?.resetMeasurement();},[floor,mode,measuring]);
+ useEffect(()=>{engine.current?.setMeasurementReviews(reviews.records,{active:measuring,showCorrect,floor,mode,cap:mode==='overview'&&floor!==0?(floor===2?LEVEL:0)+1.45:Infinity});},[reviews.records,measuring,showCorrect,floor,mode]);
+ return <div className="viewer" ref={mount}>
+  <div className="wall-measurement"><button className="icon-button measurement-toggle" aria-label={measuring?'Завершить измерение':'Измерить'} title={measuring?'Завершить измерение':'Измерить'} aria-pressed={measuring} onClick={()=>setMeasuring(v=>!v)}><Ruler size={21}/></button>
+   {measuring&&<MeasurementReview message={measurement} draft={draft} reviews={reviews} showCorrect={showCorrect} onShowCorrect={setShowCorrect} floor={floor} measureType={measureType} onMeasureType={changeMeasureType} onReset={()=>engine.current?.resetMeasurement()} onEdit={record=>{changeMeasureType(record.type||'distance');setDraft(record);}}/>}
+  </div>
+  {error&&<div className="scene-error">{error}</div>}{mode==='walk'&&stairAvailable&&<button className="button stair-navigation" onClick={()=>followingStairs?engine.current?.stopStairs():engine.current?.startStairs()}>{followingStairs?'Остановиться':floor===2?'Спуститься на 1 этаж':'Подняться на 2 этаж'}</button>}</div>;
 });
 
 

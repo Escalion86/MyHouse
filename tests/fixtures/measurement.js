@@ -1,0 +1,1 @@
+export const sampleMeasurement=()=>({id:'12345678-1234-1234-1234-123456789abc',floor:1,label:'Ширина коридора',status:'incorrect',distance:3,actualDistance:3.51,start:[0,1,0],end:[3,1,0],surfaces:[0,3].map(x=>({name:'Стена',kind:'wall',point:[x,1,0],normal:[1,0,0],vertices:[x,0,0,x,2,0,x,2,4]}))});

@@ -12,6 +12,12 @@ globalThis.document={createElement:()=>({width:512,height:512,getContext:()=>ctx
 const model=buildHouse(new T.Scene());model.applyView(0,'walk');model.root.updateMatrixWorld(true);
 const named=name=>model.root.getObjectByName(name);
 
+test('У всех измеряемых поверхностей есть уникальные устойчивые идентификаторы',()=>{
+ const ids=[];
+ model.root.traverse(o=>{if(o.userData.measureWall||o.userData.measureSurface){assert.ok(o.userData.measureId,o.name);ids.push(o.userData.measureId);}});
+ assert.equal(ids.length,new Set(ids).size);
+});
+
 test('Кабина: две перпендикулярные створки раздвигаются от угла независимо, вместе с ручками',()=>{
  const front=named('Стеклянная передняя дверь кабины'),side=named('Стеклянная правая дверь кабины');
  const fh=named('Ручка передней двери кабины'),sh=named('Ручка правой двери кабины');

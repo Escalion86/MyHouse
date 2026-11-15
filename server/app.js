@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { devices } from '../src/model/layout.js';
 import { verifyPassword, sessionHash, newSession } from './security.js';
+import { measurementRecord, validMeasurementId } from './measurements.js';
 
 const mappingKeys = new Set(devices.flatMap(device => device.channels?.length ? device.channels.map(channel => `${device.id}:${channel.id}`) : [device.id]));
 const entityPattern = /^[a-z0-9_]+\.[a-z0-9_]+$/;
@@ -64,6 +65,16 @@ export function createApp({ config, store, ha, dist = fileURLToPath(new URL('../
     await store.deleteSession(req.sessionId); res.clearCookie(cookieName, cookieOptions); res.json({ ok: true });
   });
   app.get('/api/snapshot', async (req, res) => res.json({ status: ha.status, states: ha.states, mappings: await store.getMappings(), haUrl: config.haUrl, tokenConfigured: ha.configured }));
+  app.get('/api/measurements', async (req, res) => res.json({ measurements: await store.getMeasurements() }));
+  app.put('/api/measurements/:id', async (req, res) => {
+    const record = measurementRecord(req.body, req.params.id);
+    if (!record) return res.status(400).json({ error: 'Проверьте данные замера и правильный размер.' });
+    await store.setMeasurement(record.id, record); res.json({ measurement: record });
+  });
+  app.delete('/api/measurements/:id', async (req, res) => {
+    if (!validMeasurementId(req.params.id)) return res.status(400).json({ error: 'Некорректный номер замера' });
+    await store.deleteMeasurement(req.params.id); res.json({ ok: true });
+  });
   app.put('/api/mappings/:key', async (req, res) => {
     const { entities } = req.body || {};
     if (!mappingKeys.has(req.params.key) || !Array.isArray(entities) || entities.length > 8 || !entities.every(id => typeof id === 'string' && entityPattern.test(id))) return res.status(400).json({ error: 'Некорректная привязка устройства' });

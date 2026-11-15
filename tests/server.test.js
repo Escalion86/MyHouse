@@ -5,13 +5,15 @@ import { createApp, validCommand } from '../server/app.js';
 import { hashPassword, verifyPassword, encryptToken, decryptToken } from '../server/security.js';
 import { readConfig } from '../server/config.js';
 import { devices } from '../src/model/layout.js';
+import { sampleMeasurement } from './fixtures/measurement.js';
+import {measureSurfaceExtent} from '../src/model/measurementExtent.js';
 
 const password = 'test-password-12345';
 const env = { NODE_ENV: 'production', APP_ORIGIN: 'https://house.escalion.ru', HA_URL: 'https://home.escalion.ru', MONGODB_URI: 'mongodb://localhost/myhouse', ADMIN_USERNAME: 'owner', ADMIN_PASSWORD_HASH: hashPassword(password), DATA_ENCRYPTION_KEY: 'ab'.repeat(32) };
 const config = readConfig(env);
 function memoryStore() {
-  const sessions = new Map(), mappings = {};
-  return { sessions, saveSession: async (id, value) => sessions.set(id, value), getSession: async id => sessions.get(id), deleteSession: async id => sessions.delete(id), getMappings: async () => mappings, setMapping: async (key, value) => { mappings[key] = value; } };
+  const sessions = new Map(), mappings = {}, measurements = new Map();
+  return { sessions, saveSession: async (id, value) => sessions.set(id, value), getSession: async id => sessions.get(id), deleteSession: async id => sessions.delete(id), getMappings: async () => mappings, setMapping: async (key, value) => { mappings[key] = value; }, getMeasurements:async()=>[...measurements.values()],setMeasurement:async(id,value)=>measurements.set(id,value),deleteMeasurement:async id=>measurements.delete(id) };
 }
 async function fixture(t, store = memoryStore(), overrides = {}) {
   const calls = [];
@@ -28,6 +30,32 @@ async function fixture(t, store = memoryStore(), overrides = {}) {
   };
   return { request, login, store, calls, ha };
 }
+
+test('measurement reviews require login and persist across owner sessions; updates and removal are supported',async t=>{
+ const {request,login}=await fixture(t),record=sampleMeasurement(),path='/measurements/'+record.id;
+ assert.equal((await request('/measurements')).status,401);
+ assert.equal((await request(path,{method:'PUT',body:record})).status,401);
+ const cookie=await login();
+ assert.equal((await request(path,{method:'PUT',cookie,body:record,origin:'https://untrusted.test'})).status,403);
+ assert.equal((await request(path,{method:'PUT',cookie,body:{...record,actualDistance:-5}})).status,400);
+ assert.equal((await request(path,{method:'PUT',cookie,body:record})).status,200);
+ const secondCookie=await login(),get=async()=>await(await request('/measurements',{cookie:secondCookie})).json();
+ let data=await get();assert.equal(data.measurements.length,1);assert.equal(data.measurements[0].actualDistance,3.51);
+ assert.equal((await request(path,{method:'PUT',cookie:secondCookie,body:{...record,status:'correct',actualDistance:3}})).status,200);
+ data=await get();assert.equal(data.measurements.length,1);assert.equal(data.measurements[0].actualDistance,3);assert.equal('status' in data.measurements[0],false);
+ assert.equal((await request(path,{method:'DELETE',cookie:secondCookie})).status,200);
+ assert.deepEqual((await get()).measurements,[]);
+});
+
+test('width and height reviews persist their type and real size across sessions',async t=>{
+ const {request,login}=await fixture(t),cookie=await login(),base=sampleMeasurement(),surfaces=[base.surfaces[0]];
+ for(const type of ['width','height']){
+  const record={...base,id:type==='width'?base.id:'87654321-1234-1234-1234-123456789abc',type,surfaces,...measureSurfaceExtent(surfaces[0],type),actualDistance:type==='width'?4.2:2.3};
+  assert.equal((await request('/measurements/'+record.id,{method:'PUT',cookie,body:record})).status,200);
+ }
+ const second=await login(),data=await(await request('/measurements',{cookie:second})).json();
+ assert.deepEqual(data.measurements.map(r=>[r.type,r.actualDistance]),[['width',4.2],['height',2.3]]);
+});
 
 test('password hashes and authenticated token encryption', () => {
   assert.ok(verifyPassword(password, env.ADMIN_PASSWORD_HASH));

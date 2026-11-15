@@ -1,0 +1,9 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><title>Проверка измерения стен</title>
+<style>body{margin:0}#root{height:100vh}.viewer{position:relative;width:100%;height:100%}.viewer canvas{display:block}</style>
+<div id="root"></div><script type="module">
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import Viewer from '/src/scene/Viewer.jsx';
+import '/src/style.css';
+createRoot(document.getElementById('root')).render(React.createElement(Viewer,{floor:1,mode:'overview',roomId:null,onRoom:()=>{},onDevice:()=>{},deskLight:{on:false,color:'#ffffff',brightness:1},switchStates:{}}));
+</script></html>
