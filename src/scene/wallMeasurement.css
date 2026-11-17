@@ -26,5 +26,14 @@
 .measurement-reviews li.measurement-unresolved{border-color:#7a7a7a;background:#f3f3f3}
 .measurement-reviews button{font:inherit;padding:5px 8px;margin-right:6px;border:1px solid #bac6be;background:white;border-radius:4px;cursor:pointer}
 .stair-navigation{position:absolute;bottom:170px;left:28px;z-index:5;background:#fff}
+.measurement-tabs{display:flex;gap:6px;margin-bottom:12px}
+.measurement-tabs .button{flex:1;padding:8px;font-size:12px}
+.measurement-tabs [aria-pressed=true],.measurement-task-list [aria-pressed=true]{background:#e4eefb;border-color:#1764c0}
+.measurement-task-list{list-style:none;padding:0;display:grid;gap:6px;margin:12px 0}
+.measurement-task-list .button{width:100%;text-align:left;align-items:flex-start;flex-direction:column;gap:3px;padding:8px 10px}
+.measurement-task-list small{color:#52665c;font-size:11px}
+.measurement-panel h3{font-size:15px;margin:16px 0 10px}
+.main:has(.measurement-panel) .room-caption{display:none}
+.measurement-review-form textarea{width:100%;resize:vertical;border:1px solid #94a89a;border-radius:5px;padding:8px;font:inherit}
 @media(max-width:650px){.stair-navigation{left:16px;bottom:180px}}
 @media(max-width:650px){.wall-measurement{right:16px;bottom:18px}.wall-measurement>.measurement-toggle{width:38px;height:38px}.scene-bottom .view-tools{margin-right:45px}.measurement-panel{bottom:48px;max-height:35vh;overflow:auto}}

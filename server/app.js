@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { devices } from '../src/model/layout.js';
 import { verifyPassword, sessionHash, newSession } from './security.js';
 import { measurementRecord, validMeasurementId } from './measurements.js';
+import { requestAnswer } from '../src/model/measurementRequests.js';
 
 const mappingKeys = new Set(devices.flatMap(device => device.channels?.length ? device.channels.map(channel => `${device.id}:${channel.id}`) : [device.id]));
 const entityPattern = /^[a-z0-9_]+\.[a-z0-9_]+$/;
@@ -66,6 +67,12 @@ export function createApp({ config, store, ha, dist = fileURLToPath(new URL('../
   });
   app.get('/api/snapshot', async (req, res) => res.json({ status: ha.status, states: ha.states, mappings: await store.getMappings(), haUrl: config.haUrl, tokenConfigured: ha.configured }));
   app.get('/api/measurements', async (req, res) => res.json({ measurements: await store.getMeasurements() }));
+  app.get('/api/measurement-requests', async (req, res) => res.json({ answers: await store.getRequestAnswers() }));
+  app.put('/api/measurement-requests/:id', async (req, res) => {
+    const answer = requestAnswer(req.body, req.params.id);
+    if (!answer) return res.status(400).json({ error: 'Проверьте размер, направление уступа и комментарий.' });
+    await store.setRequestAnswer(answer.id, answer); res.json({ answer });
+  });
   app.put('/api/measurements/:id', async (req, res) => {
     const record = measurementRecord(req.body, req.params.id);
     if (!record) return res.status(400).json({ error: 'Проверьте данные замера и правильный размер.' });

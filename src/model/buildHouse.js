@@ -18,7 +18,7 @@ import {buildHallLights} from './buildHallLights.js';
 import {buildStairSupports} from './buildStairSupports.js';
 import {buildUpperHall,upperHallMaterials,UPPER_HALL} from './buildUpperHall.js';
 import {createFurniture} from './furniture.js';
-import { W,D,LEVEL,GAP,planRooms as rooms,mirrorX,STAIR,HALL,LIVING,BATHROOM,SHOWER,CHILD,CLOSET,UPPER_HALL_PLAN,UPPER_Z_SHIFT,EXTERIOR_THICKNESS as EXT } from './layout.js';
+import { W,D,LEVEL,GAP,planRooms as rooms,mirrorX,STAIR,HALL,LIVING,BATHROOM,SHOWER,CHILD,CLOSET,UPPER_HALL_PLAN,UPPER_Z_SHIFT,EXTERIOR_THICKNESS as EXT,finishedCeilingHeight,WALL_THICKNESS } from './layout.js';
 
 function texture(kind) {
  const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');
@@ -175,7 +175,7 @@ export function buildHouse(scene,onSelect) {
    // Cut the actual opening from every intersecting ceiling, including the
    // living-room edge after aligning the two storeys to exterior measurements.
    for(const [a,b,c,d] of subtract(r.bounds,[STAIR.holeX0,STAIR.holeZ0,STAIR.x1,STAIR.z1]))
-    box(ceilings,r.id==='room-3'?'Потолок вокруг лестничного проёма':'Потолок '+r.name,(a+c)/2,3.025,(b+d)/2,c-a,.05,d-b,mats.white);
+    box(ceilings,r.id==='room-3'?'Потолок вокруг лестничного проёма':'Потолок '+r.name,(a+c)/2,finishedCeilingHeight(r.id)+.025,(b+d)/2,c-a,.05,d-b,mats.white);
   } else if(r.id!=='room-6')box(ceilings,'Потолок '+r.name,(x0+x1)/2,r.y+(r.floor===1?3:2.7)+.025,(z0+z1)/2,x1-x0,.05,z1-z0,mats.white);
  });
  for(const group of floorGroups)for(const mesh of group.children)if(mesh.isMesh)mesh.userData.measureSurface='floor';
@@ -190,7 +190,7 @@ export function buildHouse(scene,onSelect) {
  wall('ground-yard',g,'x',LIVING.x0-EXT,W+EXT,D+EXT/2,0,3,EXT,[{...win(.725,.6),sashWidths:[.52],name:'Окно котельной'},door(1.525,.85,{id:'boiler-yard',label:'Котельная — двор',swing:-1,dark:true,material:mats.entryBrown})],mats.brick);
  wall('ground-bathroom-side',g,'z',LIVING.z0,D,LIVING.x0-EXT/2,0,3,EXT,[{...BATHROOM.window,sashWidths:[BATHROOM.window.width-.08],name:'Окно ванной'}],mats.brick);
  wall('ground-entrance-side',g,'z',LIVING.z0,D,W+EXT/2,0,3,EXT,[measuredWindow(LIVING.frontWindow,'Окно гостиной · фронтальная стена'),door(HALL.entrance.at,HALL.entrance.width,{id:'entrance',label:'Входная дверь',hingeSide:'end',swing:-1,dark:true,material:mats.entryBrown},HALL.entrance.height),measuredWindow(9.2,'Окно кабинета')],mats.brick);
- wall('living-hall',g,'x',LIVING.x0,W,HALL.bounds[1]-.075,0,3,.15,[door(HALL.livingOpening.at,HALL.livingOpening.width,null,HALL.livingOpening.height)]);
+ wall('living-hall',g,'x',LIVING.x0,W,HALL.bounds[1]-WALL_THICKNESS.groundLivingHall/2,0,LEVEL,WALL_THICKNESS.groundLivingHall,[door(HALL.livingOpening.at,HALL.livingOpening.width,null,HALL.livingOpening.height)]);
  wall('office-hall',g,'x',LIVING.x0,W,HALL.bounds[3]+.075,0,3,.15,[door(HALL.officeOpening.at,HALL.officeOpening.width,null,HALL.officeOpening.height)]);
  wall('bathroom-hall',g,'z',HALL.bounds[1],HALL.bounds[3],HALL.bounds[0]-.05,0,3,.1,[door(HALL.bathroom.at,HALL.bathroom.width,{id:'bathroom',label:'Техническая ванная',swing:1})]);
  wall('office-boiler',g,'z',7.99,D,2.56,0,3,.1,[door(8.15,.8,{id:'office-boiler',label:'Кабинет — котельная',swing:1})]);
@@ -210,8 +210,8 @@ export function buildHouse(scene,onSelect) {
  wall('upper-child-right',u,'z',childZ0,childSide,hallFront+.15,y,2.7,.3,[],mats.wall);
  wall('upper-hall-right',u,'z',childSide,bedroomSide,hallFront+.15,y,2.7,.3,[{...UPPER_HALL.window,sashWidths:Array(2).fill((UPPER_HALL.window.width-.09)/2),name:'Окно коридора второго этажа'}],upperFace(1));
  wall('upper-bedroom-right',u,'z',bedroomSide,terraceStart,hallFront+.15,y,2.7,.3,[],mats.wall);
- wall('closet-hall',u,'x',childX0,rear-.075,childSide-.075,y,2.7,.15,[]);
- wall('child-hall',u,'x',rear-.075,hallFront,childSide-.075,y,2.7,.15,[door(up.child.at,up.child.width,{id:'child',label:'Детская',swing:1,material:upperFinishes.wood,style:'wood-glazed'})],upperFace(4));
+ wall('closet-hall',u,'x',childX0,rear-.075,childSide-WALL_THICKNESS.upperChildHall/2,y,2.7,WALL_THICKNESS.upperChildHall,[]);
+ wall('child-hall',u,'x',rear-.075,hallFront,childSide-WALL_THICKNESS.upperChildHall/2,y,2.7,WALL_THICKNESS.upperChildHall,[door(up.child.at,up.child.width,{id:'child',label:'Детская',swing:1,material:upperFinishes.wood,style:'wood-glazed'})],upperFace(4));
  wall('shower-bedroom',u,'x',-.18,rear-.075,bedroomSide+.075,y,2.7,.15,[]);
  wall('bedroom-hall',u,'x',rear-.075,hallFront,bedroomSide+.075,y,2.7,.15,[door(up.bedroom.at,up.bedroom.width,{id:'bedroom',label:'Спальня',swing:-1,material:upperFinishes.wood,style:'wood-plain'})],upperFace(5));
  wall('child-closet',u,'z',childZ0,childZ1,CHILD.closetPartition.center,y,2.7,CHILD.closetPartition.thickness,[door(CHILD.closetOpening.at,CHILD.closetOpening.width)]);

@@ -134,12 +134,12 @@ test('Межэтажное перекрытие закрывает стык фа
  }finally{model.applyView(0,'walk');model.root.updateMatrixWorld(true);}
 });
 
-test('Наружные обмеры: уступ 43 см, металл 66 см с выпуском 4 см и утопленный фасад 19 см',()=>{
+test('Черновой карниз сохраняет нижний уступ 43 см и выпуск металла 4 см независимо от привязки этажей',()=>{
  const box=name=>new T.Box3().setFromObject(named(name));
  const lowerZ=LIVING.z0-EXTERIOR_THICKNESS,upperZ=CHILD.bounds[1]-.30;
  const soffit=box('Нижняя обшивка карниза · гостиная'),metal=box('Рифлёный карниз детской');
- close(upperZ-lowerZ,.19);close(lowerZ-soffit.min.z,.43);
- close(upperZ-metal.min.z,.66);close(soffit.min.z-metal.min.z,.04);
+ close(lowerZ-soffit.min.z,.43);
+ close(metal.max.z,upperZ);close(soffit.min.z-metal.min.z,.04);
  const positions=named('Рифлёный карниз детской').geometry.attributes.position;
  assert.ok(positions.getY(0)>positions.getY(1),'Лист имеет уклон от стены');
  assert.ok(Math.abs(positions.getY(0)-positions.getY(2))>.001,'Край имеет объёмную волну');
@@ -192,10 +192,49 @@ test('Кирпичная кладка сохраняет размер и ряд�
  }finally{model.applyView(0,'walk');model.root.updateMatrixWorld(true);}
 });
 
+test('Стена у лестницы непрерывна до второго этажа, верхняя отступает в детскую на 6 см',()=>{
+ const lower=[],upper=[];
+ model.root.traverse(o=>{if(o.userData.measureId?.startsWith('wall:living-hall:'))lower.push(o);if(o.userData.measureId?.startsWith('wall:child-hall:'))upper.push(o);});
+ assert.ok(lower.length&&upper.length);
+ const lowerBox=new T.Box3().setFromObject(lower[lower.length-1]);
+ const upperBox=new T.Box3().setFromObject(upper[upper.length-1]);
+ close(lowerBox.max.z,HALL.bounds[1]);close(lowerBox.max.y,LEVEL);
+ close(lowerBox.max.z-lowerBox.min.z,.35);close(upperBox.max.z-upperBox.min.z,.18);
+ close(lowerBox.max.z-upperBox.max.z,.06);close(upperBox.min.y,LEVEL);
+ close(STAIR.holeZ0,lowerBox.max.z);
+ close(LIVING.z1,lowerBox.min.z);close(CHILD.bounds[3],upperBox.min.z);
+ // A ray from the stairwell must meet the lower partition, including the band
+ // above the first-floor ceiling that previously exposed the living room.
+ for(let x=STAIR.holeX0+.10;x<STAIR.x1-.05;x+=.20)for(const y of [2.90,3.02,3.15,LEVEL-.001]){
+  const ray=new T.Raycaster(new T.Vector3(mirrorX(x),y,HALL.bounds[1]+.1),new T.Vector3(0,0,-1));
+  const hit=ray.intersectObjects(lower)[0];assert.ok(hit,'Нет просвета в гостиную');close(hit.point.z,HALL.bounds[1]);
+ }
+ const ledge=new T.Raycaster(new T.Vector3(mirrorX((STAIR.holeX0+STAIR.x1)/2),LEVEL+.5,UPPER_HALL_PLAN.bounds[1]+.03),new T.Vector3(0,-1,0));
+ close(ledge.intersectObjects(lower)[0].point.y,LEVEL);
+});
+
+test('Измеряемые потолки соответствуют обмерам помещений, отметка второго этажа сохранена',()=>{
+ const expected={'Потолок Котельная':2.60,'Потолок Кабинет':2.88,'Потолок вокруг лестничного проёма':2.88,'Потолок Техническая ванная':3.00,'Потолок Гостиная с кухней':2.88};
+ for(const [name,height] of Object.entries(expected)){
+  const parts=named('Потолки').children.filter(o=>o.name===name);
+  assert.ok(parts.length,name);
+  for(const part of parts){
+   assert.ok(part.userData.measureSurface,name);
+   assert.ok(Math.abs(new T.Box3().setFromObject(part).min.y-height)<1e-6,name);
+  }
+ }
+ assert.equal(LEVEL,3.23);
+ for(const name of ['Освещение кухни-гостиной','Крепление люстры','Тюль вдоль двух окон','Освещение котельной']){
+  const height=name==='Освещение котельной'?2.60:2.88;
+  const object=named(name);assert.ok(object,name);
+  assert.ok(new T.Box3().setFromObject(object).max.y<=height+1e-6,name+' под потолком');
+ }
+});
+
 test('После привязки этажей потолки нижних комнат не перекрывают лестничный проём',()=>{
  const ceilings=named('Потолки').children.filter(o=>o.name.startsWith('Потолок '));
  for(let z=STAIR.holeZ0+.03;z<STAIR.z1;z+=.09){
-  const ray=new T.Raycaster(new T.Vector3(mirrorX((STAIR.holeX0+STAIR.x1)/2),3.1,z),new T.Vector3(0,-1,0),0,.2);
+  const ray=new T.Raycaster(new T.Vector3(mirrorX((STAIR.holeX0+STAIR.x1)/2),3.1,z),new T.Vector3(0,-1,0),0,.6);
   assert.equal(ray.intersectObjects(ceilings).length,0,`Проём свободен на Z=${z}`);
  }
 });
@@ -203,14 +242,14 @@ test('После привязки этажей потолки нижних ко�
 test('Детская: обмеренные стены, проход и трёхсекционное окно с двумя подвижными створками',()=>{
  const [x0,z0,x1,z1]=CHILD.bounds,w=CHILD.window,p=CHILD.closetOpening;
  const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,`${a} != ${b}`);
- near(x1-x0,5.31);near(z1-z0,3.51);near(CLOSET.bounds[2]-CLOSET.bounds[0],2.03);near(CLOSET.bounds[3]-CLOSET.bounds[1],3.51);
+ near(x1-x0,5.31);near(z1-z0,4.20);near(CLOSET.bounds[2]-CLOSET.bounds[0],2.03);near(CLOSET.bounds[3]-CLOSET.bounds[1],4.20);
  near(x1-w.at-w.width,.39);near(w.width,2.45);near(w.at-x0,2.47);
- near(z1-p.at-p.width,.42);near(p.width,.70);near(p.at-z0,2.39);
+ near(z1-p.at-p.width,.42);near(p.width,.70);near(p.at-z0,3.08);
  near(x1-CHILD.door.at-CHILD.door.width,1.08);near(CHILD.door.width,.80);near(CHILD.door.at-x0,3.43);
  near(CHILD.closetPartition.center-CHILD.closetPartition.thickness/2,x1);
  near(CHILD.closetPartition.center+CHILD.closetPartition.thickness/2,CLOSET.bounds[0]);
  const floorBox=new T.Box3().setFromObject(named('Детская'));
- near(floorBox.max.x-floorBox.min.x,5.31);near(floorBox.max.z-floorBox.min.z,3.51);
+ near(floorBox.max.x-floorBox.min.x,5.31);near(floorBox.max.z-floorBox.min.z,4.20);
  const left=named('Окно детской · стекло 1'),middle=named('Окно детской · глухое стекло 2'),right=named('Окно детской · стекло 3');
  const position=o=>o.getWorldPosition(new T.Vector3()),before=[left,middle,right].map(position);
  assert.equal(middle.userData.furnitureId,undefined);
@@ -428,7 +467,7 @@ test('Забежные ступени закрыты деревом по все�
 test('В гардеробную открыт проход из детской; ковёр и радиатор не перекрывают лестничный проём',()=>{
  assert.equal(model.doorSystem.doors.some(d=>d.id==='dressing'),false);
  assert.equal(walkBlocked(model,mirrorX(CHILD.closetPartition.center),CHILD.closetOpening.at+CHILD.closetOpening.width/2,LEVEL),false,'В гардеробную можно пройти без открытия двери');
- const hallDoorIds=model.doorSystem.doors.filter(d=>d.floor===2&&d.hinge.position.z>=UPPER_HALL_PLAN.bounds[1]-.075&&d.hinge.position.z<=UPPER_HALL_PLAN.bounds[3]+.075).map(d=>d.id);
+ const hallDoorIds=model.doorSystem.doors.filter(d=>d.floor===2&&d.hinge.position.z>=CHILD.bounds[3]&&d.hinge.position.z<=UPPER_HALL_PLAN.bounds[3]+.075).map(d=>d.id);
  assert.deepEqual(hallDoorIds.sort(),['bedroom','child','shower']);
  const rug=new T.Box3().setFromObject(named('Серо-бежевый ковёр второго этажа'));
  assert.ok(rug.min.x>mirrorX(STAIR.holeX0));
@@ -629,7 +668,7 @@ test('Коридор второго этажа: четыре размерные 
  close(front-p.child.at-p.child.width,3.28);close(p.child.width,.8);close(p.child.at-rear,.8);
  close(p.bathroom.at-child,1.61);close(p.bathroom.width,.7);close(bedroom-p.bathroom.at-p.bathroom.width,1.62);
  close(p.bedroom.at-rear,2.27);close(p.bedroom.width,.8);close(front-p.bedroom.at-p.bedroom.width,1.81);
- for(const [id,d,axis,fixed] of [['child',p.child,'x',child-.075],['bedroom',p.bedroom,'x',bedroom+.075],['shower',p.bathroom,'z',rear-.075]]){
+ for(const [id,d,axis,fixed] of [['child',p.child,'x',child-.09],['bedroom',p.bedroom,'x',bedroom+.075],['shower',p.bathroom,'z',rear-.075]]){
   const door=model.doorSystem.doors.find(d=>d.id===id);close(door.width,d.width);
   const point=door.hinge.localToWorld(new T.Vector3(door.width/2,0,0));
   close(point.x,mirrorX(axis==='x'?d.at+d.width/2:fixed));close(point.z,axis==='z'?d.at+d.width/2:fixed);

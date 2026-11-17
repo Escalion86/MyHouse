@@ -52,7 +52,7 @@ export default function MeasurementReview({message,draft,reviews,showCorrect,onS
  const visible=visibleReviews(reviews.records,{active:true,showCorrect,floor});
  useEffect(()=>{if(draft)setNotice('');},[draft]);
  async function remove(id){setDeleting(id);setNotice('');try{await reviews.remove(id);if(draft?.id===id)onReset();}catch(e){setNotice(e.message);}finally{setDeleting(null);}}
- return <div className="measurement-panel" aria-label="Проверка замеров">
+ return <div aria-label="Проверка замеров">
   <label className="measurement-type">Что измерить<select value={measureType} onChange={e=>onMeasureType(e.target.value)}>{Object.entries(measurementTypes).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
   <p role="status">{draft?'Проверьте размер и сохраните результат.':message}</p>
   {draft?<ReviewForm key={draft.id} draft={draft} save={reviews.save} onSaved={()=>{onReset();setNotice('Проверка сохранена. Геометрия дома не изменена.');}}/>:<p>{measureType==='distance'?'Выберите две параллельные поверхности стен, пола или потолка.':'Выберите один участок стены. Измеряется выделенный фрагмент между краями или проёмами, на полную высоту даже в обзоре со срезанными стенами.'}</p>}

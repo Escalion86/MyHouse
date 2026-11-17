@@ -2,6 +2,40 @@
   "schemaVersion": 1,
   "units": "meters",
   "status": "source-data-not-3d-model",
+  "heightMeasurements": {
+    "evidence": "user-message-and-local-reviews-2026-11-17",
+    "units": "meters",
+    "groundToUpperFinishedFloor": 3.23,
+    "floorToStretchCeiling": 2.88,
+    "stretchCeilingToUpperFinishedFloor": 0.35,
+    "floorToCeilingWithoutStretch": 3.00,
+    "derivedStretchCeilingDrop": 0.12,
+    "derivedBaseCeilingToUpperFinishedFloor": 0.23,
+    "finishedCeilingByRoom": {"room-1": 2.60, "room-2": 2.88, "room-3": 2.88, "room-4": 3.00, "room-5": 2.88},
+    "ceilingFinishByRoom": {"room-1": "gypsum", "room-2": "stretch", "room-3": "stretch", "room-4": "without-stretch", "room-5": "stretch"},
+    "applicationStatus": "applied-ground-floor-ceilings",
+    "note": "Пользователь подтвердил: первый этаж 288 см во всех помещениях, кроме ванной (300 см, без натяжного потолка) и котельной (260 см, гипсовый потолок). 35 см от натяжного потолка до чистового пола второго этажа включают 12 см опуска потолка. Толщина несущей конструкции отдельно не установлена."
+  },
+  "roomDepthMeasurements": {
+    "evidence": "local-measurement-request-answers-2026-11-17",
+    "units": "meters",
+    "reference": "Между отделанными внутренними поверхностями уличной стены с окнами и противоположной стены со стороны коридора.",
+    "livingWindowToHall": {"value": 3.76, "requestId": "living-window-to-hall", "confirmedAt": "2026-11-17T15:52:02.255Z"},
+    "childWindowToHall": {"value": 4.20, "previousValue": 3.51, "requestId": "child-window-to-hall", "confirmedAt": "2026-11-17T15:55:39.698Z"},
+    "closetWindowSideToHall": {"value": 4.20, "previousValue": 3.51, "evidence": "user-confirmed-2026-11-17", "note": "Пользователь подтвердил одинаковую глубину детской и гардеробной: между ними перегородка."},
+    "registrationCheck": {
+      "groundExteriorToHallFace": 4.78,
+      "upperExteriorToHallFace": 4.61,
+      "upperExteriorSetbackFromInteriorChain": 0.11,
+      "upperExteriorSetbackFromApron": null,
+      "remainingDiscrepancy": null,
+      "supersededApronEstimate": {"setback": 0.19, "discrepancy": 0.08, "reason": "66 см измерены вдоль наклонного листа, а не по горизонтали; прямое вычитание неприменимо."},
+      "formula": "(0.67 + 3.76 + 0.35) - 0.06 - (0.23 + 4.20 + 0.18) = 0.11",
+      "note": "Для независимой проверки по карнизу нужна горизонтальная проекция 66 см либо перепад высоты между концами этого замера. Направление замера выпуска металла 4 см отдельно не уточнено."
+    },
+    "applicationStatus": "applied-interior-depths-exterior-check-deferred",
+    "note": "В модели применены 376 см для гостиной и 420 см для детской и гардеробной. Привязка этажей выполнена по уступу лестничной стены 6 см; наружная проверка отложена пользователем. У проёма гардеробной сохранены прежние 42 см от стены входа и ширина 70 см; остаток до оконной стены теперь расчётный 308 см, требует проверки."
+  },
   "wallMeasurements": {
     "evidence": "user-measured-2026-11-10",
     "units": "meters",
@@ -14,30 +48,39 @@
     "stairWallAlignment": {
       "lowerWallContinuousToUpperFloor": true,
       "upperWallOffsetMagnitude": 0.06,
-      "upperWallOffsetDirection": null
+      "upperWallOffsetDirection": "toward-child",
+      "evidence": "user-message-and-local-reviews-2026-11-17",
+      "openingEdgeAlignedWithLowerHallFace": true,
+      "note": "Полоса 6 см у лестничного проёма является верхом нижней стены. Поверхность верхней стены со стороны коридора отступает к детской/гардеробной на 6 см относительно поверхности нижней стены со стороны коридора."
     },
-    "applicationStatus": "pending-storey-registration-clarification",
-    "note": "Подтверждённые толщины сохранены отдельно от прежних допущений модели. Размерная цепочка по фасаду даёт смещение внутренних стен 67 см вместо сообщённого уступа 6 см. Направление уступа и исходная привязка наружных граней требуют уточнения; геометрия пока не изменена."
+    "applicationStatus": "applied-living-child-hall-junction",
+    "note": "Применены стены гостиная/коридор 35 см, детская/коридор 18 см и отступ верхней стены к детской 6 см. Нижняя стена непрерывна до пола второго этажа 323 см. Остальные толщины здесь остаются обмерами для следующих исправлений. Наружная привязка и уклон карниза отложены пользователем; они больше не задают положение внутренней стены."
   },
   "exteriorMeasurements": {
     "evidence": "user-measured-2026-10-29",
     "childApronFromUpperWall": 0.66,
+    "childApronMeasurementDirection": "along-sloping-sheet",
+    "childApronHorizontalProjection": null,
+    "livingSoffitMeasurementOrigin": "finished-grey-ground-floor-cladding",
+    "measurementReferenceConfirmed": "user-2026-11-17",
+    "geometryStatus": "provisional-exterior-follows-interior-registration-slope-check-deferred",
     "metalBeyondSoffit": 0.04,
     "soffitFromGroundWall": {"living": 0.43, "front": 0.38, "rear": 0.39, "office": 0.40},
     "sideSoffitRange": [0.38, 0.39],
     "upperWallThicknessAssumed": 0.30,
-    "pendingClarification": ["terraceDepth", "shedDimensions", "upperWallThickness"]
+    "pendingClarification": ["terraceDepth", "shedDimensions", "childApronHorizontalProjection", "metalBeyondSoffitMeasurementDirection"]
   },
   "childMeasurements": {
     "evidence": "user-measured-2026-10-28",
     "windowWallFromClosetCorner": [0.39, 2.45, 2.47],
-    "sideWall": 3.51,
+    "sideWall": 4.20,
+    "sideWallEvidence": "local-review-and-user-confirmed-2026-11-17",
     "closetWallFromEntranceCorner": [0.42, 0.70, 2.39],
     "entranceWallReturns": [1.08, 3.43],
     "windowSections": [0.63, 1.19, 0.63],
     "operableSections": [true, false, true],
-    "closetSize": [2.03, 3.51],
-    "pendingClarification": []
+    "closetSize": [2.03, 4.20],
+    "pendingClarification": ["closetWallSegmentsAfterChildDepthCorrection", "exteriorRegistrationFromSlopedApron"]
   },
   "showerMeasurements": {
     "evidence": "user-measured-2026-10-28",
@@ -90,6 +133,8 @@
     ],
     "windowBottom": 0.6,
     "groundFloorExteriorWallThickness": 0.67,
+    "groundFloorExteriorWallThicknessTolerance": 0.01,
+    "groundFloorExteriorWallThicknessReconfirmed": "user-2026-11-17",
     "note": "Обмеры между внутренними углами и краями проёмов. Верх окон пока 2.40 м — не измерен. Высота низа окна применена также в кабинете."
   },
   "wallNames": {
@@ -102,6 +147,14 @@
   "hallMeasurements": {
     "evidence": "user-measured-2026-09-16",
     "units": "meters",
+    "verifiedTotals": {
+      "evidence": "local-review-2026-11-17",
+      "widthAtEntrance": 3.70,
+      "widthAtBathroom": 3.70,
+      "bathroomDoorReportedWidth": 0.70,
+      "bathroomDoorReference": "Ширина двери без наличников и короба",
+      "note": "Общая ширина коридора подтверждена с обоих концов. 70 см не считать подтверждением строительного проёма: пользователь указал ширину самой двери без короба. Прежняя цепочка отдельных участков 367 см пока не уточнена."
+    },
     "front": {
       "leftCornerToOpening": 2.05,
       "openingWidth": 0.98,

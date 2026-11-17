@@ -12,8 +12,8 @@ const password = 'test-password-12345';
 const env = { NODE_ENV: 'production', APP_ORIGIN: 'https://house.escalion.ru', HA_URL: 'https://home.escalion.ru', MONGODB_URI: 'mongodb://localhost/myhouse', ADMIN_USERNAME: 'owner', ADMIN_PASSWORD_HASH: hashPassword(password), DATA_ENCRYPTION_KEY: 'ab'.repeat(32) };
 const config = readConfig(env);
 function memoryStore() {
-  const sessions = new Map(), mappings = {}, measurements = new Map();
-  return { sessions, saveSession: async (id, value) => sessions.set(id, value), getSession: async id => sessions.get(id), deleteSession: async id => sessions.delete(id), getMappings: async () => mappings, setMapping: async (key, value) => { mappings[key] = value; }, getMeasurements:async()=>[...measurements.values()],setMeasurement:async(id,value)=>measurements.set(id,value),deleteMeasurement:async id=>measurements.delete(id) };
+  const sessions = new Map(), mappings = {}, measurements = new Map(), requestAnswers = new Map();
+  return { sessions, saveSession: async (id, value) => sessions.set(id, value), getSession: async id => sessions.get(id), deleteSession: async id => sessions.delete(id), getMappings: async () => mappings, setMapping: async (key, value) => { mappings[key] = value; }, getMeasurements:async()=>[...measurements.values()],setMeasurement:async(id,value)=>measurements.set(id,value),deleteMeasurement:async id=>measurements.delete(id),getRequestAnswers:async()=>[...requestAnswers.values()],setRequestAnswer:async(id,value)=>requestAnswers.set(id,value) };
 }
 async function fixture(t, store = memoryStore(), overrides = {}) {
   const calls = [];
@@ -55,6 +55,29 @@ test('width and height reviews persist their type and real size across sessions'
  }
  const second=await login(),data=await(await request('/measurements',{cookie:second})).json();
  assert.deepEqual(data.measurements.map(r=>[r.type,r.actualDistance]),[['width',4.2],['height',2.3]]);
+});
+
+test('requested measurements require login and validate direction; answers survive another session',async t=>{
+ const {request,login}=await fixture(t),path='/measurement-requests/stair-wall-offset';
+ assert.equal((await request('/measurement-requests')).status,401);
+ assert.equal((await request(path,{method:'PUT',body:{actualCm:6,direction:'toward-hall',comment:''}})).status,401);
+ const cookie=await login();
+ for(const body of [{actualCm:6,comment:''},{actualCm:6,direction:'flush',comment:''},{actualCm:-1,direction:'toward-child',comment:''},{actualCm:'6',direction:'toward-child',comment:''},{actualCm:null,comment:''}])assert.equal((await request(path,{method:'PUT',cookie,body})).status,400);
+ const body={actualCm:6,direction:'toward-child',comment:'Проверено у лестницы'};
+ assert.equal((await request(path,{method:'PUT',cookie,body,origin:'https://untrusted.test'})).status,403);
+ assert.equal((await request(path,{method:'PUT',cookie,body})).status,200);
+ const second=await login();let result=await(await request('/measurement-requests',{cookie:second})).json();assert.equal(result.answers[0].actualCm,6);assert.equal(result.answers[0].direction,'toward-child');
+ assert.equal((await request(path,{method:'PUT',cookie:second,body:{actualCm:0,direction:'flush',comment:''}})).status,200);
+ assert.equal((await request('/measurement-requests/bathroom-door-opening',{method:'PUT',cookie,body:{actualCm:null,comment:'Края скрыты коробкой'}})).status,200);
+ assert.equal((await request('/measurement-requests/unknown',{method:'PUT',cookie,body})).status,400);
+ result=await(await request('/measurement-requests',{cookie:second})).json();assert.equal(result.answers.length,2);assert.equal(result.answers.find(a=>a.id==='stair-wall-offset').actualCm,0);
+ for(const [id,actualCm] of [['living-window-to-hall',376],['child-window-to-hall',351]]){
+  assert.equal((await request(`/measurement-requests/${id}`,{method:'PUT',cookie,body:{actualCm,comment:'От отделки до отделки'}})).status,200);
+ }
+ result=await(await request('/measurement-requests',{cookie:second})).json();
+ assert.equal(result.answers.find(a=>a.id==='living-window-to-hall').actualCm,376);
+ assert.equal(result.answers.find(a=>a.id==='child-window-to-hall').actualCm,351);
+ assert.deepEqual((await(await request('/measurements',{cookie})).json()).measurements,[]);
 });
 
 test('password hashes and authenticated token encryption', () => {

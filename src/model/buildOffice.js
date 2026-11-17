@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {OFFICE as O,deskPlanPoint,HALL} from './layout.js';
+import {OFFICE as O,deskPlanPoint,HALL,finishedCeilingHeight} from './layout.js';
 import {buildWallDevices} from './buildWallDevices.js';
 import {buildOfficeChair} from './buildOfficeChair.js';
 
@@ -159,6 +159,7 @@ export function buildOffice(parent,{box,cylinder,sphere,mat,mats,colliders,picka
  sphere(clock,0,0,.025,.010,.010,.004,mats.dark);
  add('Радиатор',7.02,.42,10.05,.10,.57,1.65,mats.white);
  const curtain=mat('#cac9c5',{transparent:true,opacity:.45});for(let i=0;i<45;i++)add('Нитяная штора',6.91,1.48,9.1+i*.041,.008,2.75,.008,curtain);
- for(const z of [9.15,10.8]){add('Крепление люстры',4.9,2.97,z,.8,.05,.10,mats.metal);for(const x of [4.58,4.9,5.22]){cylinder(office,x,2.68,z,.004,.004,.54,mats.dark,8);cylinder(office,x,2.39,z,.085,.11,.22,mat('#fff3d4',{emissive:'#ffdf9e',emissiveIntensity:.22}));}}
+ const ceilingDrop=3-finishedCeilingHeight('room-2');
+ for(const z of [9.15,10.8]){add('Крепление люстры',4.9,2.97-ceilingDrop,z,.8,.05,.10,mats.metal);for(const x of [4.58,4.9,5.22]){cylinder(office,x,2.68-ceilingDrop,z,.004,.004,.54,mats.dark,8);cylinder(office,x,2.39-ceilingDrop,z,.085,.11,.22,mat('#fff3d4',{emissive:'#ffdf9e',emissiveIntensity:.22}));}}
  return {ledMaterial,ledLight,disposeArtwork:()=>{disposeWallDevices();artTexture?.dispose();artMaterial.dispose();clockTexture.dispose();clockFaceMaterial.dispose();}};
 }

@@ -1,5 +1,6 @@
 import source from '../../house-data.json' with {type:'json'};
 export const W = 7.16, D = 12.11, LEVEL = 3.23, GAP = 4.55;
+export const finishedCeilingHeight = roomId => source.heightMeasurements.finishedCeilingByRoom[roomId] ?? 2.7;
 export const wallNames=source.wallNames;
 export const hallMeasurements=source.hallMeasurements;
 const hm=hallMeasurements;
@@ -21,10 +22,11 @@ export const HALL = {
 };
 export const livingMeasurements=source.livingMeasurements;
 const lm=livingMeasurements;
+export const WALL_THICKNESS=source.wallMeasurements;
 export const EXTERIOR_THICKNESS=lm.groundFloorExteriorWallThickness;
 export const LIVING={
  x0:W-lm.leftWallFromTvCorner.reduce((s,v)=>s+v,0),x1:W,
- z0:hallLeftZ-.15-lm.frontWallFromTvCorner.reduce((s,v)=>s+v,0),z1:hallLeftZ-.15,
+ z0:hallLeftZ-WALL_THICKNESS.groundLivingHall-source.roomDepthMeasurements.livingWindowToHall.value,z1:hallLeftZ-WALL_THICKNESS.groundLivingHall,
  windowWidth:lm.windowWidth,windowBottom:lm.windowBottom,sashWidths:lm.sashWidths,
 };
 LIVING.leftWindows=[W-.86-1.8,W-.86-1.8-1.33-1.8];
@@ -35,12 +37,11 @@ export const BATHROOM={
  // Left-to-right looking at the rear facade from inside; bath corner anchors Z.
  window:{at:hallLeftZ+bm[0],width:bm[1],bottom:.90,top:2.10}
 };
-// Register both storeys by exterior faces, not by the original traced plan.
+// Register the upper hall by the measured stair-wall ledge. Exterior apron
+// measurements remain provisional and must not move the interior staircase.
 export const exteriorMeasurements=source.exteriorMeasurements;
 const em=exteriorMeasurements;
-export const UPPER_LIVING_SETBACK=em.childApronFromUpperWall-em.metalBeyondSoffit-em.soffitFromGroundWall.living;
-const measuredChildOuterZ=LIVING.z0-EXTERIOR_THICKNESS+UPPER_LIVING_SETBACK;
-export const UPPER_Z_SHIFT=measuredChildOuterZ+em.upperWallThicknessAssumed+source.childMeasurements.sideWall+.15-4.35;
+export const UPPER_Z_SHIFT=hallLeftZ-WALL_THICKNESS.stairWallAlignment.upperWallOffsetMagnitude-4.35;
 export const upperHallMeasurements=source.upperHallMeasurements;
 const uh=upperHallMeasurements.clockwiseFromWindowWallLeftCorner;
 const upperFrontX=7.35,upperChildZ=4.35+UPPER_Z_SHIFT;
@@ -62,15 +63,16 @@ export const SHOWER={
 };
 export const childMeasurements=source.childMeasurements;
 const cm=childMeasurements;
-// Keep room sizes and the stair-opening offsets; the entire upper plan follows
-// the measured facade registration. The lower stair entrance remains fixed.
-export const CLOSET={bounds:[upperFrontX-cm.closetSize[0],upperChildZ-.15-cm.closetSize[1],upperFrontX,upperChildZ-.15]};
-const childX1=UPPER_HALL_PLAN.child.at+UPPER_HALL_PLAN.child.width+cm.entranceWallReturns[0],childZ1=upperChildZ-.15;
-const childX0=UPPER_HALL_PLAN.child.at-cm.entranceWallReturns[1],childZ0=childZ1-cm.sideWall;
+// Confirmed depths extend towards the street; the hallway faces stay registered.
+export const CLOSET={bounds:[upperFrontX-cm.closetSize[0],upperChildZ-WALL_THICKNESS.upperChildHall-source.roomDepthMeasurements.closetWindowSideToHall.value,upperFrontX,upperChildZ-WALL_THICKNESS.upperChildHall]};
+const childX1=UPPER_HALL_PLAN.child.at+UPPER_HALL_PLAN.child.width+cm.entranceWallReturns[0],childZ1=upperChildZ-WALL_THICKNESS.upperChildHall;
+const childX0=UPPER_HALL_PLAN.child.at-cm.entranceWallReturns[1],childZ0=childZ1-source.roomDepthMeasurements.childWindowToHall.value;
 export const CHILD={
  bounds:[childX0,childZ0,childX1,childZ1],
  window:{at:childX0+cm.windowWallFromClosetCorner[2],width:cm.windowWallFromClosetCorner[1],bottom:.9,top:2.4,sections:cm.windowSections,operable:cm.operableSections},
- closetOpening:{at:childZ0+cm.closetWallFromEntranceCorner[2],width:cm.closetWallFromEntranceCorner[1]},
+ // Preserve the recorded 42 cm return at the entrance, not the superseded
+ // 239 cm window-side segment. The latter now follows from the total depth.
+ closetOpening:{at:childZ1-cm.closetWallFromEntranceCorner[0]-cm.closetWallFromEntranceCorner[1],width:cm.closetWallFromEntranceCorner[1]},
  // Fit the unmeasured partition thickness between the measured inside faces.
  closetPartition:{center:(childX1+CLOSET.bounds[0])/2,thickness:CLOSET.bounds[0]-childX1},
  door:UPPER_HALL_PLAN.child
@@ -100,15 +102,15 @@ export const entrance = {position:worldPoint([W+EXTERIOR_THICKNESS/2,0,HALL.entr
 export const officeDoor = {position:worldPoint([HALL.officeOpening.at+HALL.officeOpening.width/2,0,hallRightZ+.075]),forward:[0,0,1]};
 export const boilerDoor = worldPoint([2.56,0,8.55]);
 export const assumptions = [
- 'Фасады: стена детской утоплена на 19 см относительно наружной стены гостиной (66 − 4 − 43 см). Карниз из рифлёного металла выступает на 66 см от стены детской и на 4 см за нижнюю обшивку. Нижний уступ: гостиная 43 см, боковые стороны 38–39 см, противоположный торец 40 см. Уклон и высота торцевой доски — по фото. Толщина наружной стены второго этажа пока 30 см; глубина террасы 135 см и размеры примыкающего сарая приблизительные.',
- 'Детская и гардеробная: мебель, текстиль и лампа в форме воздушного шара восстановлены по фотографиям. Детская 531 × 351 см, гардеробная 203 × 351 см, открытый проход 70 см с отступами 42 и 239 см. Окно 245 см с секциями 63–119–63 см, средняя глухая, боковые открываются. Отступы окна 39 и 247 см. Стена входа: 108 см до двери, дверь 80 см, затем 343 см до угла. Толщина перегородки гардеробной согласована между обмеренными внутренними гранями и составляет 17 см; отдельно не измерена. Габариты мебели и высоты окна приблизительные. Потолок принят чистовым белым по аналогии с остальными комнатами. В гардеробную ведёт открытый проход без двери. При взгляде от входа вглубь гардеробной комод, секции с коробами и одежда слева, гладильная доска и сушилка справа, чёрный стеллаж в торце. Узкое зеркало детской — на стене входной двери; телевизор на кронштейне, отступ от стены около 22 см принят по фото.',
+ 'Внутренний стык этажей: стена гостиной/коридора 35 см непрерывна до пола второго этажа, верхняя стена детской/коридора 18 см отступает к детской на 6 см. Наружная привязка отложена: 66 см карниза измерены вдоль наклонного листа, 43 см — от серой облицовки; уклон пока по фото. Толщина наружных стен второго этажа в черновой оболочке пока 30 см.',
+ 'Детская 531 × 420 см, гардеробная 203 × 420 см. У прохода гардеробной сохранены 42 см от стены входа и ширина 70 см; остаток до окна 308 см получен расчётом и требует проверки. Окно 245 см, секции 63–119–63 см, отступы 39 и 247 см. Мебель и отделка — по фото, без изменения габаритов при перемещении стен.',
  'Душевая второго этажа: 393 × 238 см, окно 118 см с отступами 183 и 92 см, дверь 70 см (80 см с коробом). Высота окна, кабина, сантехника и мебель пока по пропорциям фотографий. Размерная цепочка двери сохранена по полотну; короб шириной 80 см перекрывает края проёма.',
  'Котельная: оборудование, трубы, вешалка со щитками и стремянка восстановлены по фотографиям; размеры и трассы приблизительные. Окно слева, наружная дверь справа при взгляде изнутри. Сохранена установленная черновая отделка, убраны складируемые листы и мусор.',
  'Ванная первого этажа: стена с окном 345 см, цепочка слева направо 212–83–50 см. За исходный угол принят угол со стороны ванны; разница с прежними 370 см учтена со стороны унитаза. Высота окна, ширина комнаты и мебель пока приблизительные. Инсталляция в стене, потолок белый, верх машин свободен.',
  'Спальня: две кровати, угловой шкаф с зеркалом, тумбочки, ковры, фотообои и шторы — по фотографиям. Размеры и расстановка мебели, балконный блок и высоты пока приблизительные; потолок чистовой белый по пожеланию владельца. Рисунки текстиля и фотообоев переданы схематично.',
  'Коридор второго этажа: 488 × 393 см, окно 117 см, двери детской и спальни 80 см, ванной 70 см — по обмерам. В гардеробную вход из детской. Высота окна, ковёр и радиатор пока приблизительные.',
  'Кухня-гостиная по внутренним обмерам: 672 × 376 см. Наружные стены первого этажа — 67 см. Окна гостиной и кабинета шириной 180 см, низ на 60 см; верх пока принят на 240 см. Мебель кухни и гостиной — по пропорциям фотографий.',
- 'Перекрытие принято 23 см: пол второго этажа на отметке 3,23 м.',
+ 'Пол второго этажа на отметке 3,23 м подтверждён. Высота до натяжного потолка первого этажа 2,88 м; в ванной без натяжного потолка 3,00 м; в котельной до гипсового потолка 2,60 м. Между натяжным потолком и полом второго этажа 35 см, включая 12 см опуска потолка; толщина несущей конструкции отдельно не определена.',
  'Комнаты размещены по схеме плана. Несогласованные размеры сведены в общий контур; площади в списке — из документа, а не обмер 3D-модели.',
  'Фронтальная стена — с входом; левая — со стороны гостиной и кухни; правая — со стороны кабинета и котельной; задняя — со стороны кухни, ванной и котельной.',
  'Коридор по обмерам: 462 × 370 см. Противоположная размерная цепочка даёт 367 см; расхождение 3 см временно оставлено у угла со стороны гостиной (67 вместо 64 см).',

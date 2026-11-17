@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
-import {planRooms} from './layout.js';
+import {planRooms,finishedCeilingHeight} from './layout.js';
 
 // Visual reconstruction, not an installation diagram. Sizes estimated from photos.
 export function buildBoilerRoom(parent,ceilings,{box,cylinder,sphere,mat,mats,colliders,pickables}){
@@ -22,12 +22,9 @@ export function buildBoilerRoom(parent,ceilings,{box,cylinder,sphere,mat,mats,co
  lining('Над входом из кабинета',x1-.012,2.55,8.55,.018,.9,.8,beige);
  for(const z of [8.95,10.05,11.15])lining('Шов обшивки',x0+.024,1.5,z,.006,3,.027,seam);
  for(const y of [1.2,2.4])lining('Горизонтальный шов обшивки',x0+.024,y,(z0+z1)/2,.006,.026,z1-z0,seam);
- // Clean timber floor and a ceiling retaining the installed partial lining.
+ // Timber floor; the measured gypsum ceiling is built with the room ceilings.
  for(let n=0;n<14;n++){const d=(z1-z0)/14;const f=add('Доска пола котельной',(x0+x1)/2,.014,z0+(n+.5)*d,x1-x0,.025,d-.007,n%3?timber:beige);f.userData.roomId='room-1';pickables.push(f);}
- const top=new T.Group();top.name='Потолок котельной по фото';ceilings.add(top);
- for(let n=0;n<15;n++){const d=(z1-z0)/15;box(top,'Доска потолка котельной',(x0+x1)/2,2.985,z0+(n+.5)*d,x1-x0,.028,d-.006,timber);}
- for(const z of [8.4,9.25,10.1,10.95,11.8])box(top,'Профиль потолка котельной',(x0+x1)/2,2.92,z,x1-x0,.05,.035,steel);
- for(const z of [9.65,11.45])box(top,'Закреплённая панель потолка',1.72,2.887,z,1.3,.018,1.05,beige);
+ const top=new T.Group();top.name='Освещение котельной';top.position.y=finishedCeilingHeight('room-1')-2.875;ceilings.add(top);
  for(const z of [9.25,11.1]){cylinder(top,1.52,2.75,z,.004,.004,.25,ivory);cylinder(top,1.52,2.60,z,.023,.023,.06,white);sphere(top,1.52,2.55,z,.035,.047,.035,m('#ffffe5',{emissive:'#fff5cd',emissiveIntensity:.45}));}
  // All heating equipment faces into the room (+X in the source plan).
  const wallX=x0+.15;

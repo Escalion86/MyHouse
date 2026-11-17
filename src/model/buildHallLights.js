@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {LEVEL,HALL,STAIR} from './layout.js';
+import {LEVEL,HALL,STAIR,finishedCeilingHeight} from './layout.js';
 
 // Rail length and aiming angles are estimated from the owner's photographs.
 // Upstairs positions follow the window and shower corners in the Sept 30 photos.
@@ -16,7 +16,7 @@ export function buildHallLights(ceilings,{box,cylinder,mat,mats,pickables}){
  ];
  for(const f of fixtures){
   const rail=new T.Group();rail.name='Трековый светильник · '+f.name;
-  rail.position.set(f.x,f.floor===1?3:LEVEL+2.70,f.z);rail.rotation.y=f.angle;
+  rail.position.set(f.x,f.floor===1?finishedCeilingHeight('room-3'):LEVEL+2.70,f.z);rail.rotation.y=f.angle;
   rail.userData={floor:f.floor,placementAccuracy:'photo-estimate'};ceilings.add(rail);
   box(rail,'Чёрная шина · 3 спота',0,-.014,0,1.12,.028,.034,mats.trackBlack);
   box(rail,'Паз шины',0,-.029,0,1.07,.005,.010,mats.dark);

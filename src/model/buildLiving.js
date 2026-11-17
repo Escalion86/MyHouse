@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
-import {LIVING as L} from './layout.js';
+import {LIVING as L,finishedCeilingHeight} from './layout.js';
 
 // Photo-based furniture estimates, inside the measured 6.72 × 3.76 m room.
 export function buildLiving(parent,ceilings,{box,cylinder,mat,mats,colliders,pickables,deviceMeshes}) {
@@ -43,9 +43,9 @@ export function buildLiving(parent,ceilings,{box,cylinder,mat,mats,colliders,pic
  }
  const back=L.x0,side=L.z1;
  // Fridge sits at the rear/window corner, then the hob/oven and corner units.
- run('Кухня · задний ряд',back+.30,2.66,2.64,Math.PI/2);
+ run('Кухня · задний ряд',back+.30,side-1.33,2.64,Math.PI/2);
  run('Кухня · боковой ряд',1.95,side-.30,1.86,Math.PI);
- run('Кухня · верхний задний ряд',back+.175,2.66,2.64,Math.PI/2,true);
+ run('Кухня · верхний задний ряд',back+.175,side-1.33,2.64,Math.PI/2,true);
  run('Кухня · верхний боковой шкаф',1.61,side-.175,.65,Math.PI,true);
  add('Духовой шкаф',back+.619,.47,2.12,.042,.64,.56,black);
  add('Стекло духовки',back+.644,.44,2.12,.012,.39,.44,material('#152026',{roughness:.16}));
@@ -166,9 +166,10 @@ export function buildLiving(parent,ceilings,{box,cylinder,mat,mats,colliders,pic
  const sheer=material('#f1f0e8',{transparent:true,opacity:.16,depthWrite:false,side:T.DoubleSide});
  const drape=material('#74717b',{roughness:1,side:T.DoubleSide});
  function curtain(x,z,width,angle,m,name){
-  const geo=new T.PlaneGeometry(width,2.94,Math.max(24,Math.round(width*70)),1),positions=geo.attributes.position;
+  const height=finishedCeilingHeight('room-5')-.06;
+  const geo=new T.PlaneGeometry(width,height,Math.max(24,Math.round(width*70)),1),positions=geo.attributes.position;
   for(let i=0;i<positions.count;i++)positions.setZ(i,Math.sin(positions.getX(i)*85)*.027);geo.computeVertexNormals();
-  const p=new T.Mesh(geo,m);p.name=name;p.position.set(x,1.51,z);p.rotation.y=angle;p.receiveShadow=true;g.add(p);
+  const p=new T.Mesh(geo,m);p.name=name;p.position.set(x,.04+height/2,z);p.rotation.y=angle;p.receiveShadow=true;g.add(p);
  }
  curtain((L.x0+L.x1)/2,L.z0+.09,L.x1-L.x0-.08,0,sheer,'Тюль вдоль двух окон');
  for(const [x,w] of [[L.x0+.16,.30],[3.73,.35],[L.x1-.17,.30]])curtain(x,L.z0+.15,w,0,drape,'Серая портьера левой стены');
@@ -177,7 +178,7 @@ export function buildLiving(parent,ceilings,{box,cylinder,mat,mats,colliders,pic
  for(const at of L.leftWindows)add('Радиатор под окном гостиной',at+.90,.29,L.z0+.055,1.15,.40,.10,white);
  add('Радиатор фронтального окна',L.x1-.055,.29,L.frontWindow+.90,.10,.40,1.15,white);
  // Two chrome fixtures with eight faceted shades each and twelve perimeter spots.
- const lights=new T.Group();lights.name='Освещение кухни-гостиной';ceilings.add(lights);
+ const lights=new T.Group();lights.name='Освещение кухни-гостиной';lights.position.y=finishedCeilingHeight('room-5')-3;ceilings.add(lights);
  const ceiling=ceilings.getObjectByName('Потолок Гостиная с кухней');if(ceiling)ceiling.material=material('#f7f7f2',{roughness:.16,metalness:.05});
  const lightMat=material('#f3f1df',{emissive:'#f1e9d7',emissiveIntensity:.20});
  const recessed=[];for(let i=0;i<5;i++)for(const z of [L.z0+.38,L.z1-.38])recessed.push([L.x0+.45+i*(L.x1-L.x0-.9)/4,z]);
