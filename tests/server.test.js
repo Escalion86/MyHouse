@@ -7,6 +7,7 @@ import { readConfig } from '../server/config.js';
 import { devices } from '../src/model/layout.js';
 import { sampleMeasurement } from './fixtures/measurement.js';
 import {measureSurfaceExtent} from '../src/model/measurementExtent.js';
+import {calculateRoomMetrics} from '../src/model/roomMetrics.js';
 
 const password = 'test-password-12345';
 const env = { NODE_ENV: 'production', APP_ORIGIN: 'https://house.escalion.ru', HA_URL: 'https://home.escalion.ru', MONGODB_URI: 'mongodb://localhost/myhouse', ADMIN_USERNAME: 'owner', ADMIN_PASSWORD_HASH: hashPassword(password), DATA_ENCRYPTION_KEY: 'ab'.repeat(32) };
@@ -30,6 +31,18 @@ async function fixture(t, store = memoryStore(), overrides = {}) {
   };
   return { request, login, store, calls, ha };
 }
+
+test('room metrics API requires login and returns the shared model calculation',async t=>{
+ const {request,login}=await fixture(t);
+ for(const path of ['/rooms/metrics','/rooms/room-10/metrics'])assert.equal((await request(path)).status,401);
+ const cookie=await login(),response=await request('/rooms/metrics',{cookie}),report=await response.json();
+ assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
+ assert.deepEqual(report,calculateRoomMetrics());
+ const single=await request('/rooms/room-10/metrics',{cookie});assert.equal(single.status,200);
+ assert.deepEqual((await single.json()).room,report.rooms.find(r=>r.id==='room-10'));
+ assert.equal((await request('/rooms/unknown/metrics',{cookie})).status,404);
+ const balcony=await(await request('/rooms/room-6/metrics',{cookie})).json();assert.equal(balcony.room.volumeM3,null);
+});
 
 test('measurement reviews require login and persist across owner sessions; updates and removal are supported',async t=>{
  const {request,login}=await fixture(t),record=sampleMeasurement(),path='/measurements/'+record.id;

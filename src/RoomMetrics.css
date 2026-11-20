@@ -1,0 +1,27 @@
+.room-metric-summary{padding:16px 0;border-bottom:1px solid #dde3df;margin-bottom:12px}
+.room-metric-summary h3{font-size:14px;margin:0 0 10px}
+.room-metric-summary dl{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 14px}
+.room-metric-summary dt{font-size:12px;color:#59685f;margin-bottom:5px}
+.room-metric-summary dd{margin:0;font-size:16px;font-weight:600}
+.room-metric-summary .button{white-space:normal;font-size:12px;line-height:1.5}
+dialog.metrics-dialog{width:min(760px,calc(100vw - 32px));max-width:calc(100vw - 32px);box-sizing:border-box}
+.room-metrics{font-size:14px;line-height:1.55}
+.metric-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px;background:#f0f4f1;border-radius:10px;margin:18px 0}
+.metric-totals span,.metric-totals strong{display:block}
+.metric-totals span{font-size:12px;color:#53635a}
+.metric-totals strong{font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+.metric-table-scroll{overflow-x:auto;border:1px solid #dde3df;border-radius:8px}
+.metric-table-scroll:focus-visible{outline:2px solid #355c49;outline-offset:3px}
+.room-metrics table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.room-metrics th,.room-metrics td{padding:10px 12px;border-bottom:1px solid #e3e8e4;text-align:right;white-space:nowrap}
+.room-metrics th:first-child{text-align:left;white-space:normal;min-width:125px}
+.room-metrics thead,.room-metrics tfoot{background:#f5f7f5;font-size:12px}
+.room-metrics tbody th{font-weight:500}
+.room-metrics tfoot th,.room-metrics tfoot td{border-bottom:0;font-weight:600}
+.room-metrics small{display:block;font-weight:400;font-size:11px;color:#59685f}
+.room-metrics .metric-mobile-height{display:none}
+.metric-caption{padding:8px 12px;text-align:left;color:#59685f;font-size:12px}
+.metric-method{margin-top:20px}
+.metric-method summary{cursor:pointer;font-weight:600}
+.metric-method p{color:#53635a}
+@media(max-width:600px){.metric-totals{grid-template-columns:1fr;padding:12px;gap:10px}.metric-totals>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.metric-totals strong{font-size:18px;margin:0}.room-metrics th,.room-metrics td{padding:9px 8px}.room-metrics{font-size:13px}.room-metrics th:first-child{min-width:90px}.room-metrics .metric-height{display:none}.room-metrics .metric-mobile-height{display:block}}

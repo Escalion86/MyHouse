@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { devices } from '../src/model/layout.js';
+import { calculateRoomMetrics } from '../src/model/roomMetrics.js';
 import { verifyPassword, sessionHash, newSession } from './security.js';
 import { measurementRecord, validMeasurementId } from './measurements.js';
 import { requestAnswer } from '../src/model/measurementRequests.js';
@@ -62,6 +63,12 @@ export function createApp({ config, store, ha, dist = fileURLToPath(new URL('../
     res.json({ ok: true });
   });
   app.use('/api', authorized);
+  app.get('/api/rooms/metrics', (req,res) => res.json(calculateRoomMetrics()));
+  app.get('/api/rooms/:id/metrics', (req,res) => {
+    const report=calculateRoomMetrics(),room=report.rooms.find(r=>r.id===req.params.id);
+    if(!room)return res.status(404).json({error:'Помещение не найдено'});
+    res.json({schemaVersion:report.schemaVersion,source:report.source,units:report.units,room,method:report.method});
+  });
   app.post('/api/logout', async (req, res) => {
     await store.deleteSession(req.sessionId); res.clearCookie(cookieName, cookieOptions); res.json({ ok: true });
   });

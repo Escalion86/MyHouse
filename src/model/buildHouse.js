@@ -1,4 +1,5 @@
 import {buildSite} from './buildSite.js';
+import {roomFloorPieces} from './roomGeometry.js';
 import * as T from 'three';
 import {buildOffice} from './buildOffice.js';
 import {createDoors} from './doors.js';
@@ -162,13 +163,9 @@ export function buildHouse(scene,onSelect) {
  const win=(at,width=1.35)=>({at,width,bottom:.9,top:2.4});
  rooms.forEach(r=>{
   const [x0,z0,x1,z1]=r.bounds,g=floorGroups[r.floor-1];
-  if(r.id==='room-8') {
-   box(g,'Пол коридора', (x0+STAIR.holeX0)/2,r.y-.1,(z0+z1)/2,STAIR.holeX0-x0,.2,z1-z0,mats.floor);
-   box(g,'Пол у лестницы',(STAIR.holeX0+x1)/2,r.y-.1,(STAIR.z1+z1)/2,x1-STAIR.holeX0,.2,z1-STAIR.z1,mats.floor);
-   box(g,'Верхняя площадка',(STAIR.x1+x1)/2,r.y-.1,(z0+STAIR.z1)/2,x1-STAIR.x1,.2,STAIR.z1-z0,mats.floor);
-   box(g,'Пол у стены детской',(STAIR.holeX0+STAIR.x1)/2,r.y-.1,(z0+STAIR.holeZ0)/2,STAIR.x1-STAIR.holeX0,.2,STAIR.holeZ0-z0,mats.floor);
-  } else {
-   const fl=box(g,r.name,(x0+x1)/2,r.y-.1,(z0+z1)/2,x1-x0,.2,z1-z0,['room-4','room-9'].includes(r.id)?mats.tile:mats.floor);fl.userData.roomId=r.id;pickables.push(fl);
+  for(const {name,bounds:[a,b,c,d]} of roomFloorPieces(r)) {
+   const fl=box(g,name,(a+c)/2,r.y-.1,(b+d)/2,c-a,.2,d-b,['room-4','room-9'].includes(r.id)?mats.tile:mats.floor);
+   if(r.id!=='room-8'){fl.userData.roomId=r.id;pickables.push(fl);}
   }
   const label={id:r.id,position:new T.Vector3((x0+x1)/2,r.y+.05,(z0+z1)/2)};labels.push(label);
   if(r.floor===1) {
@@ -176,7 +173,7 @@ export function buildHouse(scene,onSelect) {
    // living-room edge after aligning the two storeys to exterior measurements.
    for(const [a,b,c,d] of subtract(r.bounds,[STAIR.holeX0,STAIR.holeZ0,STAIR.x1,STAIR.z1]))
     box(ceilings,r.id==='room-3'?'Потолок вокруг лестничного проёма':'Потолок '+r.name,(a+c)/2,finishedCeilingHeight(r.id)+.025,(b+d)/2,c-a,.05,d-b,mats.white);
-  } else if(r.id!=='room-6')box(ceilings,'Потолок '+r.name,(x0+x1)/2,r.y+(r.floor===1?3:2.7)+.025,(z0+z1)/2,x1-x0,.05,z1-z0,mats.white);
+  } else if(r.id!=='room-6')box(ceilings,'Потолок '+r.name,(x0+x1)/2,r.y+finishedCeilingHeight(r.id)+.025,(z0+z1)/2,x1-x0,.05,z1-z0,mats.white);
  });
  for(const group of floorGroups)for(const mesh of group.children)if(mesh.isMesh)mesh.userData.measureSurface='floor';
  const footprint=mesh=>{
